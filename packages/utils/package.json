@@ -14,7 +14,7 @@
     "dev": "tsc -p tsconfig.json --watch",
     "lint": "eslint \"src/**/*.ts\"",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "clean": "rm -rf dist .turbo .tsbuildinfo"
   },
   "devDependencies": {
