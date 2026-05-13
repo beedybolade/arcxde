@@ -52,13 +52,21 @@ export class DomainError extends Error {
   public readonly httpStatus: number;
   public readonly details?: Record<string, unknown>;
 
-  constructor(kind: DomainErrorKind, code: string, message: string, options: DomainErrorOptions = {}) {
+  constructor(
+    kind: DomainErrorKind,
+    code: string,
+    message: string,
+    options: DomainErrorOptions = {},
+  ) {
     super(message, options.cause ? { cause: options.cause } : undefined);
     this.name = 'DomainError';
     this.kind = kind;
     this.code = code;
     this.httpStatus = KIND_TO_STATUS[kind];
-    this.details = options.details;
+
+    if (options.details !== undefined) {
+      this.details = options.details;
+    }
     // V8 stack capture
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, DomainError);
@@ -71,7 +79,10 @@ export class DomainError extends Error {
     return new DomainError('VALIDATION_FAILED', code, message, options);
   }
 
-  static unauthenticated(message = 'Authentication required', options?: DomainErrorOptions): DomainError {
+  static unauthenticated(
+    message = 'Authentication required',
+    options?: DomainErrorOptions,
+  ): DomainError {
     return new DomainError('UNAUTHENTICATED', 'UNAUTHENTICATED', message, options);
   }
 
@@ -80,7 +91,12 @@ export class DomainError extends Error {
   }
 
   static notFound(resource: string, options?: DomainErrorOptions): DomainError {
-    return new DomainError('NOT_FOUND', `${resource.toUpperCase()}_NOT_FOUND`, `${resource} not found`, options);
+    return new DomainError(
+      'NOT_FOUND',
+      `${resource.toUpperCase()}_NOT_FOUND`,
+      `${resource} not found`,
+      options,
+    );
   }
 
   static conflict(code: string, message: string, options?: DomainErrorOptions): DomainError {

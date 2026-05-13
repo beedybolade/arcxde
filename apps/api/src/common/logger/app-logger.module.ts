@@ -41,41 +41,43 @@ const REDACT_PATHS = [
       useFactory: (config: AppConfigService) => ({
         pinoHttp: {
           level: config.logging.level,
-          // Hand-pick the fields rendered for HTTP logs; the defaults are noisy.
           customProps: () => ({ service: config.observability.serviceName }),
           serializers: {
-            // Compact request log: method + url + reqId
-            req: (req: { method: string; url: string; id?: string; headers?: Record<string, string> }) => ({
+            req: (req: {
+              method: string;
+              url: string;
+              id?: string;
+              headers?: Record<string, string>;
+            }) => ({
               method: req.method,
               url: req.url,
               requestId: req.id,
             }),
             res: (res: { statusCode: number }) => ({ statusCode: res.statusCode }),
           },
-          // 5xx → error, 4xx → warn, everything else info
           customLogLevel: (_req, res, err) => {
             if (err || res.statusCode >= 500) return 'error';
             if (res.statusCode >= 400) return 'warn';
             return 'info';
           },
           redact: { paths: REDACT_PATHS, censor: '[REDACTED]' },
-          // Re-use the request id installed by registerRequestIdHook so
-          // header / log / trace all use the SAME id.
           genReqId: (req) => {
             const existing = (req as { id?: string }).id;
             return typeof existing === 'string' && existing.length > 0 ? existing : randomUUID();
           },
-          transport: config.logging.pretty
+          ...(config.logging.pretty
             ? {
-                target: 'pino-pretty',
-                options: {
-                  singleLine: true,
-                  colorize: true,
-                  translateTime: 'SYS:HH:MM:ss.l',
-                  ignore: 'pid,hostname,service',
+                transport: {
+                  target: 'pino-pretty',
+                  options: {
+                    singleLine: true,
+                    colorize: true,
+                    translateTime: 'SYS:HH:MM:ss.l',
+                    ignore: 'pid,hostname,service',
+                  },
                 },
               }
-            : undefined,
+            : {}),
         },
       }),
     }),

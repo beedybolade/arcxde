@@ -20,7 +20,7 @@ import type {
 
 import { DomainError } from '../../common/errors/domain-error.js';
 
-import { OrganizationsRepository } from './organizations.repository.js';
+import { ListOrganizationsInput, OrganizationsRepository } from './organizations.repository.js';
 
 @Injectable()
 export class OrganizationsService {
@@ -34,10 +34,9 @@ export class OrganizationsService {
     return org;
   }
 
-  async list(input: {
-    cursor?: string;
-    limit: number;
-  }): Promise<{ data: Organization[]; pagination: PaginationMeta }> {
+  async list(
+    input: ListOrganizationsInput,
+  ): Promise<{ data: Organization[]; pagination: PaginationMeta }> {
     const { items, nextCursor } = await this.repo.list(input);
     return {
       data: items,

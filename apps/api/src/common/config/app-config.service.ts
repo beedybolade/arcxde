@@ -74,10 +74,12 @@ export class AppConfigService {
   }
 
   get observability(): { otlpEndpoint?: string; serviceName: string; sentryDsn?: string } {
+    const otlp = this.env.OTEL_EXPORTER_OTLP_ENDPOINT;
+    const sentry = this.env.SENTRY_DSN;
     return {
-      otlpEndpoint: this.env.OTEL_EXPORTER_OTLP_ENDPOINT || undefined,
       serviceName: this.env.OTEL_SERVICE_NAME,
-      sentryDsn: this.env.SENTRY_DSN || undefined,
+      ...(otlp ? { otlpEndpoint: otlp } : {}),
+      ...(sentry ? { sentryDsn: sentry } : {}),
     };
   }
 }

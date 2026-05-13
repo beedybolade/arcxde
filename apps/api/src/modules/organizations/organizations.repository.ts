@@ -20,17 +20,17 @@ import { PrismaService } from '../prisma/prisma.service.js';
 export interface CreateOrganizationInput {
   name: string;
   slug: string;
-  billingEmail?: string;
+  billingEmail?: string | undefined;
 }
 
 export interface UpdateOrganizationInput {
-  name?: string;
-  slug?: string;
-  billingEmail?: string;
+  name?: string | undefined;
+  slug?: string | undefined;
+  billingEmail?: string | undefined;
 }
 
 export interface ListOrganizationsInput {
-  cursor?: string;
+  cursor?: string | undefined;
   limit: number;
 }
 

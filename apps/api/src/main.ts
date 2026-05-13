@@ -1,19 +1,3 @@
-/**
- * Application entry point.
- *
- * Responsibilities, in order:
- *   1. Validate environment BEFORE Nest boots. Misconfig → exit 1, fast.
- *   2. Bootstrap Nest with the Fastify adapter (ADR-0003).
- *   3. Install global cross-cutting concerns: request-id, cors, helmet, compression,
- *      cookies, exception filter, URI versioning, Swagger.
- *   4. Listen.
- *   5. Wire graceful-shutdown signals so deploys don't drop in-flight requests.
- *
- * See:
- *   - docs/architecture/backend.md → bootstrap order
- *   - docs/operations/deployment.md → graceful shutdown
- *   - docs/architecture/security.md → headers, CORS
- */
 import compress from '@fastify/compress';
 import cookie from '@fastify/cookie';
 import cors from '@fastify/cors';
@@ -33,26 +17,17 @@ import { registerRequestIdHook } from './common/middleware/request-id.hook.js';
 const SHUTDOWN_TIMEOUT_MS = 30_000;
 
 async function bootstrap(): Promise<void> {
-  // ---- 1. Env validation FIRST. Crash early if invalid. ----
-  // We call parseEnv twice (here + inside AppConfigModule) deliberately: this
-  // call surfaces a clean error before Nest gets involved with its own logging.
   parseEnv(process.env);
 
-  // ---- 2. Build the Fastify adapter ----
   const fastify = new FastifyAdapter({
-    // Trust X-Forwarded-* from the LB; required for correct rate-limiting and HTTPS detection
     trustProxy: true,
-    // Generate a stable request id; replaced by registerRequestIdHook if header present
     requestIdHeader: 'x-request-id',
     requestIdLogLabel: 'requestId',
-    // Cap body size; oversize uploads go through a separate signed-URL path
     bodyLimit: 1_048_576, // 1 MiB
-    // Disable Fastify's own logger — Pino via nestjs-pino handles HTTP logging
     logger: false,
   });
   registerRequestIdHook(fastify.getInstance());
 
-  // ---- 3. Bootstrap Nest ----
   const app = await NestFactory.create<NestFastifyApplication>(AppModule, fastify, {
     bufferLogs: true,
   });
@@ -61,12 +36,9 @@ async function bootstrap(): Promise<void> {
   const config = app.get(AppConfigService);
   const logger = new Logger('Bootstrap');
 
-  // ---- 4. Global concerns ----
-  // Body parsers come built-in with Fastify; we wire only the extras.
-
   // Security headers (CSP defaults are conservative; loosen per route via metadata only)
   await app.register(helmet, {
-    contentSecurityPolicy: config.isProduction ? undefined : false,
+    ...(config.isProduction ? {} : { contentSecurityPolicy: false }),
     crossOriginEmbedderPolicy: false,
   });
 
@@ -120,8 +92,6 @@ async function bootstrap(): Promise<void> {
     });
   }
 
-  // ---- 5. Graceful shutdown ----
-  // Nest emits onModuleDestroy on SIGTERM/SIGINT when this is enabled.
   app.enableShutdownHooks();
 
   // ---- 6. Listen ----
