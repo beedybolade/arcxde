@@ -11,9 +11,7 @@
 // =============================================================================
 
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["fullTextSearchPostgres", "metrics"]
-  // Smaller engine for container deploys
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
@@ -26,15 +24,22 @@ datasource db {
 // Organizations — the primary tenant boundary
 // -----------------------------------------------------------------------------
 model Organization {
-  id             String           @id @default(dbgenerated("'org_' || gen_random_uuid()::text"))
-  name           String           @db.VarChar(100)
-  slug           String           @unique @db.VarChar(50)
-  plan           OrganizationPlan @default(free)
-  billingEmail   String?          @map("billing_email") @db.VarChar(254)
-  createdAt      DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt      DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id           String           @id @default(dbgenerated("'org_' || gen_random_uuid()::text"))
+  name         String           @db.VarChar(100)
+  slug         String           @unique @db.VarChar(50)
+  plan         OrganizationPlan @default(free)
+  billingEmail String?          @map("billing_email") @db.VarChar(254)
+  createdAt    DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  memberships Membership[]
+  memberships    Membership[]
+  teams          Team[]
+  ssoConfig      SsoConfig?
+  courseCatalogs CourseCatalog[]
+  libraries      Library[]
+  payments       Payment[]
+  partnerApis    PartnerApi[]
+  feeds          Feed[]
 
   @@index([createdAt])
   @@map("organizations")
@@ -66,7 +71,23 @@ model User {
   createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  memberships Membership[]
+  memberships        Membership[]
+  teamMembers        TeamMember[]
+  oauthConnections   OAuthConnection[]
+  sessions           Session[]
+  savedCourses       SavedCourse[]
+  savedMedia         SavedMedia[]
+  reviews            Review[]
+  userAwards         UserAward[]
+  userRewards        UserReward[]
+  tokenBalance       TokenBalance?
+  tokenTransactions  TokenTransaction[]
+  adminUser          AdminUser?
+  newsRead           NewsRead[]
+  authoredNews       News[]
+  payments           Payment[]
+  quizAttempts       QuizAttempt[]
+  assessmentAttempts AssessmentAttempt[]
 
   @@index([createdAt])
   @@map("users")
@@ -98,4 +119,744 @@ enum Role {
   member
 
   @@map("role")
+}
+
+// -----------------------------------------------------------------------------
+// Teams — sub-groups within an organization
+// -----------------------------------------------------------------------------
+model Team {
+  id             String   @id @default(dbgenerated("'team_' || gen_random_uuid()::text"))
+  name           String   @db.VarChar(100)
+  slug           String   @db.VarChar(50)
+  organizationId String   @map("organization_id")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  members      TeamMember[]
+  savedCourses SavedCourse[]
+
+  @@unique([organizationId, slug])
+  @@index([organizationId])
+  @@map("teams")
+}
+
+model TeamMember {
+  id        String   @id @default(dbgenerated("'tm_' || gen_random_uuid()::text"))
+  teamId    String   @map("team_id")
+  userId    String   @map("user_id")
+  joinedAt  DateTime @default(now()) @map("joined_at") @db.Timestamptz(6)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+  @@index([teamId])
+  @@index([userId])
+  @@map("team_members")
+}
+
+// -----------------------------------------------------------------------------
+// SSO & OAuth Configuration
+// -----------------------------------------------------------------------------
+model SsoConfig {
+  id             String      @id @default(dbgenerated("'sso_' || gen_random_uuid()::text"))
+  organizationId String      @unique @map("organization_id")
+  provider       SsoProvider
+  domain         String      @db.VarChar(255) // e.g., "@acme.com"
+  metadata       Json? // provider-specific config
+  enabled        Boolean     @default(true)
+  createdAt      DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("sso_configs")
+}
+
+enum SsoProvider {
+  okta
+  auth0
+  azure_ad
+  google_workspace
+
+  @@map("sso_provider")
+}
+
+model OAuthConnection {
+  id           String        @id @default(dbgenerated("'oauth_' || gen_random_uuid()::text"))
+  userId       String        @map("user_id")
+  provider     OAuthProvider
+  providerId   String        @map("provider_id") @db.VarChar(255)
+  accessToken  String        @map("access_token") @db.Text
+  refreshToken String?       @map("refresh_token") @db.Text
+  expiresAt    DateTime?     @map("expires_at") @db.Timestamptz(6)
+  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerId])
+  @@index([userId])
+  @@map("oauth_connections")
+}
+
+enum OAuthProvider {
+  google
+  github
+  linkedin
+  microsoft
+
+  @@map("oauth_provider")
+}
+
+// -----------------------------------------------------------------------------
+// Sessions
+// -----------------------------------------------------------------------------
+model Session {
+  id        String   @id @default(dbgenerated("'sess_' || gen_random_uuid()::text"))
+  userId    String   @map("user_id")
+  token     String   @unique @db.VarChar(255)
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+  userAgent String?  @map("user_agent") @db.Text
+  ipAddress String?  @map("ip_address") @db.VarChar(45)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+  @@index([userId])
+  @@map("sessions")
+}
+
+// -----------------------------------------------------------------------------
+// Course Catalog & Learning Content
+// -----------------------------------------------------------------------------
+model CourseCatalog {
+  id             String   @id @default(dbgenerated("'cat_' || gen_random_uuid()::text"))
+  name           String   @db.VarChar(100)
+  description    String?  @db.Text
+  organizationId String?  @map("organization_id") // null = global catalog
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  courses      Course[]
+
+  @@index([organizationId])
+  @@map("course_catalogs")
+}
+
+model Course {
+  id              String    @id @default(dbgenerated("'crs_' || gen_random_uuid()::text"))
+  catalogId       String    @map("catalog_id")
+  title           String    @db.VarChar(200)
+  description     String?   @db.Text
+  thumbnailUrl    String?   @map("thumbnail_url") @db.VarChar(500)
+  durationMinutes Int?      @map("duration_minutes") // estimated total minutes
+  published       Boolean   @default(false)
+  publishedAt     DateTime? @map("published_at") @db.Timestamptz(6)
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  catalog      CourseCatalog @relation(fields: [catalogId], references: [id], onDelete: Cascade)
+  modules      Module[]
+  briefs       Brief[]
+  levelingQuiz LevelingQuiz?
+  savedBy      SavedCourse[]
+  reviews      Review[]
+  awards       CourseAward[]
+  userAwards   UserAward[]
+
+  @@index([catalogId])
+  @@index([published])
+  @@map("courses")
+}
+
+model Module {
+  id              String   @id @default(dbgenerated("'mod_' || gen_random_uuid()::text"))
+  courseId        String   @map("course_id")
+  title           String   @db.VarChar(200)
+  description     String?  @db.Text
+  order           Int // position in course
+  durationMinutes Int?     @map("duration_minutes")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  course      Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  assessments Assessment[]
+  savedMedia  SavedMedia[] // module-level saved media
+
+  @@unique([courseId, order])
+  @@index([courseId])
+  @@map("modules")
+}
+
+model Brief {
+  id        String   @id @default(dbgenerated("'brf_' || gen_random_uuid()::text"))
+  courseId  String   @map("course_id")
+  title     String   @db.VarChar(200)
+  content   String   @db.Text
+  order     Int
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, order])
+  @@index([courseId])
+  @@map("briefs")
+}
+
+// -----------------------------------------------------------------------------
+// Leveling Quiz (course pre/post assessment)
+// -----------------------------------------------------------------------------
+model LevelingQuiz {
+  id           String   @id @default(dbgenerated("'quiz_' || gen_random_uuid()::text"))
+  courseId     String   @unique @map("course_id")
+  title        String   @db.VarChar(200)
+  passingScore Int      @default(70) @map("passing_score")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  course    Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  questions QuizQuestion[]
+  attempts  QuizAttempt[]
+
+  @@map("leveling_quizzes")
+}
+
+model QuizQuestion {
+  id            String   @id @default(dbgenerated("'qq_' || gen_random_uuid()::text"))
+  quizId        String   @map("quiz_id")
+  text          String   @db.Text
+  options       Json // [{ "key": "A", "text": "..." }]
+  correctAnswer String   @map("correct_answer") @db.VarChar(10)
+  points        Int      @default(10)
+  order         Int
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  quiz LevelingQuiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@index([quizId])
+  @@map("quiz_questions")
+}
+
+model QuizAttempt {
+  id          String    @id @default(dbgenerated("'qa_' || gen_random_uuid()::text"))
+  quizId      String    @map("quiz_id")
+  userId      String    @map("user_id")
+  score       Int
+  passed      Boolean
+  answers     Json // [{ "questionId": "...", "answer": "A" }]
+  startedAt   DateTime  @map("started_at") @db.Timestamptz(6)
+  completedAt DateTime? @map("completed_at") @db.Timestamptz(6)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  quiz LevelingQuiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  user User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([quizId])
+  @@index([userId])
+  @@map("quiz_attempts")
+}
+
+// -----------------------------------------------------------------------------
+// Assessments (module-level)
+// -----------------------------------------------------------------------------
+model Assessment {
+  id               String   @id @default(dbgenerated("'asm_' || gen_random_uuid()::text"))
+  moduleId         String   @map("module_id")
+  title            String   @db.VarChar(200)
+  description      String?  @db.Text
+  passingScore     Int      @default(70) @map("passing_score")
+  timeLimitMinutes Int?     @map("time_limit_minutes")
+  attemptsAllowed  Int      @default(3) @map("attempts_allowed")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  module    Module               @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  questions AssessmentQuestion[]
+  attempts  AssessmentAttempt[]
+
+  @@index([moduleId])
+  @@map("assessments")
+}
+
+model AssessmentQuestion {
+  id            String       @id @default(dbgenerated("'aq_' || gen_random_uuid()::text"))
+  assessmentId  String       @map("assessment_id")
+  text          String       @db.Text
+  questionType  QuestionType @default(multiple_choice)
+  options       Json? // for multiple choice/select
+  correctAnswer Json // can be string or array for multiple-answer
+  points        Int          @default(10)
+  order         Int
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  assessment Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  @@index([assessmentId])
+  @@map("assessment_questions")
+}
+
+enum QuestionType {
+  multiple_choice
+  multiple_answer
+  true_false
+  text_input
+
+  @@map("question_type")
+}
+
+model AssessmentAttempt {
+  id           String    @id @default(dbgenerated("'aat_' || gen_random_uuid()::text"))
+  assessmentId String    @map("assessment_id")
+  userId       String    @map("user_id")
+  score        Int?
+  passed       Boolean?
+  answers      Json // [{ "questionId": "...", "answer": "..." }]
+  startedAt    DateTime  @map("started_at") @db.Timestamptz(6)
+  completedAt  DateTime? @map("completed_at") @db.Timestamptz(6)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  assessment Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([assessmentId, userId, startedAt]) // prevent duplicate attempts in parallel
+  @@index([assessmentId])
+  @@index([userId])
+  @@map("assessment_attempts")
+}
+
+// -----------------------------------------------------------------------------
+// Saved Content
+// -----------------------------------------------------------------------------
+model SavedCourse {
+  id        String   @id @default(dbgenerated("'sc_' || gen_random_uuid()::text"))
+  userId    String   @map("user_id")
+  courseId  String   @map("course_id")
+  teamId    String?  @map("team_id") // if saved by team
+  savedAt   DateTime @default(now()) @map("saved_at") @db.Timestamptz(6)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  team   Team?  @relation(fields: [teamId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, courseId])
+  @@index([courseId])
+  @@index([teamId])
+  @@index([userId])
+  @@map("saved_courses")
+}
+
+model SavedMedia {
+  id        String   @id @default(dbgenerated("'sm_' || gen_random_uuid()::text"))
+  userId    String   @map("user_id")
+  mediaId   String   @map("media_id")
+  moduleId  String?  @map("module_id")
+  savedAt   DateTime @default(now()) @map("saved_at") @db.Timestamptz(6)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  media  Media   @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  module Module? @relation(fields: [moduleId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, mediaId])
+  @@index([mediaId])
+  @@index([moduleId])
+  @@index([userId])
+  @@map("saved_media")
+}
+
+// -----------------------------------------------------------------------------
+// Library & Media
+// -----------------------------------------------------------------------------
+model Library {
+  id             String   @id @default(dbgenerated("'lib_' || gen_random_uuid()::text"))
+  name           String   @db.VarChar(100)
+  description    String?  @db.Text
+  organizationId String?  @map("organization_id")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  media        Media[]
+
+  @@index([organizationId])
+  @@map("libraries")
+}
+
+model Media {
+  id              String   @id @default(dbgenerated("'med_' || gen_random_uuid()::text"))
+  libraryId       String   @map("library_id")
+  title           String   @db.VarChar(200)
+  description     String?  @db.Text
+  url             String   @db.VarChar(500)
+  mimeType        String   @map("mime_type") @db.VarChar(100)
+  fileSize        Int?     @map("file_size") // in bytes
+  durationSeconds Int?     @map("duration_seconds") // for video/audio
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  library Library      @relation(fields: [libraryId], references: [id], onDelete: Cascade)
+  savedBy SavedMedia[]
+
+  @@index([libraryId])
+  @@map("media")
+}
+
+// -----------------------------------------------------------------------------
+// Reviews & Ratings
+// -----------------------------------------------------------------------------
+model Review {
+  id         String   @id @default(dbgenerated("'rev_' || gen_random_uuid()::text"))
+  userId     String   @map("user_id")
+  courseId   String   @map("course_id")
+  rating     Int      @db.SmallInt // 1-5
+  title      String?  @db.VarChar(200)
+  comment    String?  @db.Text
+  isVerified Boolean  @default(false) @map("is_verified") // completed course?
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId]) // one review per user per course
+  @@index([courseId, rating])
+  @@index([userId])
+  @@map("reviews")
+}
+
+// -----------------------------------------------------------------------------
+// Awards & Rewards (Gamification)
+// -----------------------------------------------------------------------------
+model Award {
+  id          String    @id @default(dbgenerated("'awd_' || gen_random_uuid()::text"))
+  name        String    @db.VarChar(100)
+  description String?   @db.Text
+  iconUrl     String?   @map("icon_url") @db.VarChar(500)
+  type        AwardType
+  points      Int       @default(0)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  userAwards   UserAward[]
+  courseAwards CourseAward[]
+
+  @@map("awards")
+}
+
+enum AwardType {
+  course_completion
+  quiz_perfect_score
+  streak_days
+  early_adopter
+  contributor
+
+  @@map("award_type")
+}
+
+model CourseAward {
+  id        String   @id @default(dbgenerated("'ca_' || gen_random_uuid()::text"))
+  courseId  String   @map("course_id")
+  awardId   String   @map("award_id")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  award  Award  @relation(fields: [awardId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, awardId])
+  @@map("course_awards")
+}
+
+model UserAward {
+  id        String   @id @default(dbgenerated("'ua_' || gen_random_uuid()::text"))
+  userId    String   @map("user_id")
+  awardId   String   @map("award_id")
+  earnedAt  DateTime @default(now()) @map("earned_at") @db.Timestamptz(6)
+  courseId  String?  @map("course_id") // which course triggered this
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  award  Award   @relation(fields: [awardId], references: [id], onDelete: Cascade)
+  course Course? @relation(fields: [courseId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, awardId])
+  @@index([awardId])
+  @@index([userId])
+  @@map("user_awards")
+}
+
+model Reward {
+  id             String   @id @default(dbgenerated("'rwd_' || gen_random_uuid()::text"))
+  name           String   @db.VarChar(100)
+  description    String?  @db.Text
+  pointsRequired Int      @map("points_required")
+  stock          Int      @default(-1) // -1 = unlimited
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  userRewards UserReward[]
+
+  @@map("rewards")
+}
+
+model UserReward {
+  id         String   @id @default(dbgenerated("'ur_' || gen_random_uuid()::text"))
+  userId     String   @map("user_id")
+  rewardId   String   @map("reward_id")
+  redeemedAt DateTime @default(now()) @map("redeemed_at") @db.Timestamptz(6)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reward Reward @relation(fields: [rewardId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, rewardId])
+  @@index([rewardId])
+  @@index([userId])
+  @@map("user_rewards")
+}
+
+// -----------------------------------------------------------------------------
+// Feed & News
+// -----------------------------------------------------------------------------
+model Feed {
+  id             String   @id @default(dbgenerated("'feed_' || gen_random_uuid()::text"))
+  name           String   @db.VarChar(100)
+  description    String?  @db.Text
+  type           FeedType @default(global)
+  organizationId String?  @map("organization_id")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  newsItems    News[]
+
+  @@index([organizationId])
+  @@map("feeds")
+}
+
+enum FeedType {
+  global
+  organization
+  team
+
+  @@map("feed_type")
+}
+
+model News {
+  id          String    @id @default(dbgenerated("'news_' || gen_random_uuid()::text"))
+  feedId      String    @map("feed_id")
+  title       String    @db.VarChar(200)
+  content     String    @db.Text
+  authorId    String    @map("author_id")
+  publishedAt DateTime  @map("published_at") @db.Timestamptz(6)
+  expiresAt   DateTime? @map("expires_at") @db.Timestamptz(6)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  feed   Feed       @relation(fields: [feedId], references: [id], onDelete: Cascade)
+  author User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  readBy NewsRead[]
+
+  @@index([authorId])
+  @@index([feedId, publishedAt])
+  @@index([publishedAt])
+  @@map("news")
+}
+
+model NewsRead {
+  id        String   @id @default(dbgenerated("'nr_' || gen_random_uuid()::text"))
+  newsId    String   @map("news_id")
+  userId    String   @map("user_id")
+  readAt    DateTime @default(now()) @map("read_at") @db.Timestamptz(6)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  news News @relation(fields: [newsId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([newsId, userId])
+  @@index([newsId])
+  @@index([userId])
+  @@map("news_read")
+}
+
+// -----------------------------------------------------------------------------
+// Payments & Tokens
+// -----------------------------------------------------------------------------
+model Payment {
+  id                    String        @id @default(dbgenerated("'pay_' || gen_random_uuid()::text"))
+  userId                String        @map("user_id")
+  organizationId        String?       @map("organization_id")
+  amount                Decimal       @db.Decimal(10, 2)
+  currency              String        @default("USD") @db.VarChar(3)
+  status                PaymentStatus @default(pending)
+  stripePaymentIntentId String?       @unique @map("stripe_payment_intent_id")
+  metadata              Json?
+  paidAt                DateTime?     @map("paid_at") @db.Timestamptz(6)
+  createdAt             DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@index([status])
+  @@index([userId])
+  @@map("payments")
+}
+
+enum PaymentStatus {
+  pending
+  succeeded
+  failed
+  refunded
+
+  @@map("payment_status")
+}
+
+model TokenPrice {
+  id            String   @id @default(dbgenerated("'tp_' || gen_random_uuid()::text"))
+  price         Decimal  @db.Decimal(10, 6) // e.g., $0.001234 per token
+  currency      String   @default("USD") @db.VarChar(3)
+  effectiveFrom DateTime @map("effective_from") @db.Timestamptz(6)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([effectiveFrom])
+  @@map("token_prices")
+}
+
+model TokenBalance {
+  id        String   @id @default(dbgenerated("'tb_' || gen_random_uuid()::text"))
+  userId    String   @unique @map("user_id")
+  balance   Int      @default(0)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("token_balances")
+}
+
+model TokenTransaction {
+  id           String               @id @default(dbgenerated("'tt_' || gen_random_uuid()::text"))
+  userId       String               @map("user_id")
+  amount       Int // positive = earned, negative = spent
+  type         TokenTransactionType
+  referenceId  String?              @map("reference_id") // e.g., course_id, reward_id
+  description  String?              @db.Text
+  balanceAfter Int                  @map("balance_after")
+  createdAt    DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@index([referenceId])
+  @@index([userId])
+  @@map("token_transactions")
+}
+
+enum TokenTransactionType {
+  course_completion
+  quiz_bonus
+  purchase
+  reward_redemption
+  admin_adjustment
+
+  @@map("token_transaction_type")
+}
+
+// -----------------------------------------------------------------------------
+// Admin & Partner APIs
+// -----------------------------------------------------------------------------
+model AdminUser {
+  id        String    @id @default(dbgenerated("'adm_' || gen_random_uuid()::text"))
+  userId    String    @unique @map("user_id")
+  role      AdminRole @default(admin)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  logs AdminLog[]
+
+  @@map("admin_users")
+}
+
+enum AdminRole {
+  super_admin
+  admin
+  content_manager
+  support
+
+  @@map("admin_role")
+}
+
+model AdminLog {
+  id         String   @id @default(dbgenerated("'alog_' || gen_random_uuid()::text"))
+  adminId    String   @map("admin_id")
+  action     String   @db.VarChar(100)
+  entityType String   @map("entity_type") @db.VarChar(50)
+  entityId   String   @map("entity_id")
+  changes    Json?
+  ipAddress  String?  @map("ip_address") @db.VarChar(45)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  admin AdminUser @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([adminId])
+  @@index([createdAt])
+  @@index([entityType, entityId])
+  @@map("admin_logs")
+}
+
+model PartnerApi {
+  id             String    @id @default(dbgenerated("'papi_' || gen_random_uuid()::text"))
+  name           String    @db.VarChar(100)
+  apiKeyHash     String    @unique @map("api_key_hash") @db.VarChar(255)
+  organizationId String?   @map("organization_id")
+  permissions    Json // array of allowed endpoints/actions
+  rateLimit      Int       @default(100) @map("rate_limit") // requests per minute
+  isActive       Boolean   @default(true) @map("is_active")
+  lastUsedAt     DateTime? @map("last_used_at") @db.Timestamptz(6)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  expiresAt      DateTime? @map("expires_at") @db.Timestamptz(6)
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@map("partner_apis")
+}
+
+// -----------------------------------------------------------------------------
+// FAQ & Glossary
+// -----------------------------------------------------------------------------
+model FaqItem {
+  id        String   @id @default(dbgenerated("'faq_' || gen_random_uuid()::text"))
+  question  String   @db.Text
+  answer    String   @db.Text
+  category  String?  @db.VarChar(50)
+  order     Int      @default(0)
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([category])
+  @@index([isActive])
+  @@map("faq_items")
+}
+
+model GlossaryTerm {
+  id         String   @id @default(dbgenerated("'gloss_' || gen_random_uuid()::text"))
+  term       String   @unique @db.VarChar(100)
+  definition String   @db.Text
+  category   String?  @db.VarChar(50)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([term])
+  @@map("glossary_terms")
 }
