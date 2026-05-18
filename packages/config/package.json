@@ -2,9 +2,14 @@
   "name": "@app/config",
   "version": "0.0.0",
   "private": true,
+  "main": "eslint-base.cjs",
   "description": "Shared TypeScript / ESLint / Prettier configs for the monorepo.",
   "type": "commonjs",
-  "files": ["tsconfig.*.json", "eslint-base.cjs", "README.md"],
+  "files": [
+    "tsconfig.*.json",
+    "eslint-base.cjs",
+    "README.md"
+  ],
   "exports": {
     "./tsconfig.lib.json": "./tsconfig.lib.json",
     "./tsconfig.node.json": "./tsconfig.node.json",
