@@ -89,9 +89,65 @@ model User {
   quizAttempts       QuizAttempt[]
   assessmentAttempts AssessmentAttempt[]
   lessonProgress UserLessonProgress[]
+  onboarding UserOnboarding?
 
   @@index([createdAt])
   @@map("users")
+}
+
+// -----------------------------------------------------------------------------
+// Onboarding Questions & User Responses
+// -----------------------------------------------------------------------------
+
+// Defines a question for a specific role
+model OnboardingQuestion {
+  id          String   @id @default(dbgenerated("'obq_' || gen_random_uuid()::text"))
+  role        String   @map("role")            // "analyst", "developer", etc. (no enum)
+  questionKey String   @map("question_key")    // stable identifier, e.g., "ai_usage"
+  text        String   @db.Text               // displayed question text
+  description String?  @db.Text               // optional helper text
+  options     Json     // array of option labels, e.g., ["I rarely use AI", "I use AI occasionally", ...]
+  order       Int      @default(0)
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  answers UserOnboardingAnswer[]
+
+  @@unique([role, questionKey])
+  @@index([role])
+  @@index([isActive])
+  @@map("onboarding_questions")
+}
+
+// User's onboarding session (one per user)
+model UserOnboarding {
+  id          String   @id @default(dbgenerated("'ubo_' || gen_random_uuid()::text"))
+  userId      String   @unique @map("user_id")
+  role        String   @map("role")            // selected role, e.g., "analyst"
+  completedAt DateTime @default(now()) @map("completed_at") @db.Timestamptz(6)
+
+  user    User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answers UserOnboardingAnswer[]
+
+  @@map("user_onboarding")
+}
+
+// Stores the user's selected answer for each question
+model UserOnboardingAnswer {
+  id             String   @id @default(dbgenerated("'uba_' || gen_random_uuid()::text"))
+  onboardingId   String   @map("onboarding_id")
+  questionId     String   @map("question_id")
+  selectedOption String   @map("selected_option") @db.VarChar(255) // the option text they chose
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  onboarding UserOnboarding    @relation(fields: [onboardingId], references: [id], onDelete: Cascade)
+  question   OnboardingQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([onboardingId, questionId])
+  @@index([onboardingId])
+  @@index([questionId])
+  @@map("user_onboarding_answers")
 }
 
 // -----------------------------------------------------------------------------
