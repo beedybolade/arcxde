@@ -79,6 +79,8 @@ async function main(): Promise<void> {
         'AI is central to my workflow',
         'I help shape AI-enabled products or workflows',
       ],
+      optionWeights: [0, 0.25, 0.5, 0.75, 1.0],
+      questionWeight: 1.5,
       order: 1,
     },
     {
@@ -92,6 +94,8 @@ async function main(): Promise<void> {
         'Financial or regulated outcomes',
         'High-impact or sensitive decisions',
       ],
+      optionWeights: [0.2, 0.4, 0.6, 0.8, 1.0],
+      questionWeight: 1.0,
       order: 2,
     },
     {
@@ -105,6 +109,8 @@ async function main(): Promise<void> {
         'Health or sensitive personal data',
         'Mixed or multiple data types',
       ],
+      optionWeights: [0.2, 0.4, 0.8, 1.0, 0.6],
+      questionWeight: 1.0,
       order: 3,
     },
     {
@@ -119,6 +125,8 @@ async function main(): Promise<void> {
         'Building better AI-enabled products',
         'Career development',
       ],
+      optionWeights: [0.4, 0.6, 0.8, 1.0, 1.0, 0.5],
+      questionWeight: 0.5,
       order: 4,
     },
   ];
@@ -136,6 +144,8 @@ async function main(): Promise<void> {
         'I build features that use AI/ML',
         'I architect AI-powered systems',
       ],
+      optionWeights: [0, 0.25, 0.5, 0.75, 1.0],
+      questionWeight: 1.5,
       order: 1,
     },
     {
@@ -149,6 +159,8 @@ async function main(): Promise<void> {
         'Cost and performance',
         'Ethical and responsible AI',
       ],
+      optionWeights: [0.3, 0.6, 0.7, 0.8, 1.0],
+      questionWeight: 1.0,
       order: 2,
     },
     {
@@ -162,6 +174,8 @@ async function main(): Promise<void> {
         'Evaluating AI model outputs',
         'AI security and safety',
       ],
+      optionWeights: [0.3, 0.6, 0.8, 0.7, 1.0],
+      questionWeight: 0.5,
       order: 3,
     },
   ];
@@ -179,6 +193,8 @@ async function main(): Promise<void> {
         'We are actively piloting AI initiatives',
         'AI is central to our strategy',
       ],
+      optionWeights: [0, 0.25, 0.5, 0.75, 1.0],
+      questionWeight: 1.5,
       order: 1,
     },
     {
@@ -192,6 +208,8 @@ async function main(): Promise<void> {
         'Competitive pressure',
         'Risk and compliance',
       ],
+      optionWeights: [0.3, 0.5, 0.7, 0.5, 0.8],
+      questionWeight: 1.0,
       order: 2,
     },
     {
@@ -205,6 +223,8 @@ async function main(): Promise<void> {
         'AI governance and strategy',
         'Keeping up with AI trends',
       ],
+      optionWeights: [0.3, 0.5, 0.7, 0.9, 0.4],
+      questionWeight: 0.5,
       order: 3,
     },
   ];
@@ -222,6 +242,8 @@ async function main(): Promise<void> {
         'I design AI-powered interfaces',
         'I prototype with AI-generated assets',
       ],
+      optionWeights: [0, 0.25, 0.5, 0.75, 0.6],
+      questionWeight: 1.5,
       order: 1,
     },
     {
@@ -235,6 +257,8 @@ async function main(): Promise<void> {
         'Measuring user experience',
         'Integrating AI feedback loops',
       ],
+      optionWeights: [0.3, 0.5, 0.7, 0.6, 0.9],
+      questionWeight: 1.0,
       order: 2,
     },
     {
@@ -248,6 +272,8 @@ async function main(): Promise<void> {
         'Evaluating AI-powered UX',
         'Accessibility in AI products',
       ],
+      optionWeights: [0.5, 0.6, 0.7, 0.8, 0.9],
+      questionWeight: 0.5,
       order: 3,
     },
   ];
@@ -265,6 +291,8 @@ async function main(): Promise<void> {
         'AI is integrated into our workflows',
         'We build AI‑enabled products',
       ],
+      optionWeights: [0, 0.2, 0.5, 0.75, 1.0],
+      questionWeight: 1.5,
       order: 1,
     },
     {
@@ -278,6 +306,8 @@ async function main(): Promise<void> {
         'Measuring productivity gains',
         'Ethical and legal risks',
       ],
+      optionWeights: [0.4, 0.6, 0.4, 0.7, 0.9],
+      questionWeight: 1.0,
       order: 2,
     },
     {
@@ -291,6 +321,8 @@ async function main(): Promise<void> {
         'Creating AI policies and guidelines',
         'Budgeting for AI tools',
       ],
+      optionWeights: [0.4, 0.6, 0.7, 0.8, 0.5],
+      questionWeight: 0.5,
       order: 3,
     },
   ];
@@ -326,7 +358,7 @@ async function main(): Promise<void> {
   for (const q of allQuestions) {
     await prisma.onboardingQuestion.upsert({
       where: { role_questionKey: { role: q.role, questionKey: q.questionKey } },
-      update: {},
+      update: { optionWeights: q.optionWeights, questionWeight: q.questionWeight },
       create: q,
     });
   }

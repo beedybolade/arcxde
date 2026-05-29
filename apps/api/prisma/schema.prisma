@@ -88,8 +88,9 @@ model User {
   payments           Payment[]
   quizAttempts       QuizAttempt[]
   assessmentAttempts AssessmentAttempt[]
-  lessonProgress UserLessonProgress[]
-  onboarding UserOnboarding?
+  lessonProgress   UserLessonProgress[]
+  onboarding       UserOnboarding?
+  onboardingResult UserOnboardingResult?
 
   @@index([createdAt])
   @@map("users")
@@ -101,16 +102,18 @@ model User {
 
 // Defines a question for a specific role
 model OnboardingQuestion {
-  id          String   @id @default(dbgenerated("'obq_' || gen_random_uuid()::text"))
-  role        String   @map("role")            // "analyst", "developer", etc. (no enum)
-  questionKey String   @map("question_key")    // stable identifier, e.g., "ai_usage"
-  text        String   @db.Text               // displayed question text
-  description String?  @db.Text               // optional helper text
-  options     Json     // array of option labels, e.g., ["I rarely use AI", "I use AI occasionally", ...]
-  order       Int      @default(0)
-  isActive    Boolean  @default(true) @map("is_active")
-  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id             String   @id @default(dbgenerated("'obq_' || gen_random_uuid()::text"))
+  role           String   @map("role")            // "analyst", "developer", etc. (no enum)
+  questionKey    String   @map("question_key")    // stable identifier, e.g., "ai_usage"
+  text           String   @db.Text               // displayed question text
+  description    String?  @db.Text               // optional helper text
+  options        Json     // array of option labels, e.g., ["I rarely use AI", "I use AI occasionally", ...]
+  order          Int      @default(0)
+  isActive       Boolean  @default(true) @map("is_active")
+  questionWeight Float    @default(1.0) @map("question_weight") // overall multiplier for this question
+  optionWeights  Json     @default("[]") @map("option_weights") // per-option scores, same length as options
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   answers UserOnboardingAnswer[]
 
@@ -139,15 +142,30 @@ model UserOnboardingAnswer {
   onboardingId   String   @map("onboarding_id")
   questionId     String   @map("question_id")
   selectedOption String   @map("selected_option") @db.VarChar(255) // the option text they chose
+  selectedWeight Float    @default(0) @map("selected_weight")      // denormalised weight of the selected option
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  onboarding UserOnboarding    @relation(fields: [onboardingId], references: [id], onDelete: Cascade)
+  onboarding UserOnboarding     @relation(fields: [onboardingId], references: [id], onDelete: Cascade)
   question   OnboardingQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
   @@unique([onboardingId, questionId])
   @@index([onboardingId])
   @@index([questionId])
   @@map("user_onboarding_answers")
+}
+
+// Computed readiness profile derived from the user's weighted answers
+model UserOnboardingResult {
+  id              String   @id @default(dbgenerated("'ubr_' || gen_random_uuid()::text"))
+  userId          String   @unique @map("user_id")
+  totalScore      Float    @map("total_score")
+  normalizedScore Float    @map("normalized_score")
+  profileKey      String?  @map("profile_key") // e.g., "beginner", "intermediate", "advanced"
+  computedAt      DateTime @default(now()) @map("computed_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_onboarding_results")
 }
 
 // -----------------------------------------------------------------------------

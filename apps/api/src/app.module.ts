@@ -11,6 +11,7 @@ import { ClsModule } from 'nestjs-cls';
 import { AppConfigModule } from './common/config/app-config.module.js';
 import { AppLoggerModule } from './common/logger/app-logger.module.js';
 import { HealthModule } from './modules/health/health.module.js';
+import { OnboardingModule } from './modules/onboarding/onboarding.module.js';
 import { OrganizationsModule } from './modules/organizations/organizations.module.js';
 import { PrismaModule } from './modules/prisma/prisma.module.js';
 
@@ -30,6 +31,7 @@ import { PrismaModule } from './modules/prisma/prisma.module.js';
 
     // ---- Feature modules (one per bounded context) ----
     HealthModule,
+    OnboardingModule,
     OrganizationsModule,
   ],
 })
