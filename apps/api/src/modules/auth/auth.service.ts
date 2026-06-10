@@ -1,5 +1,6 @@
 // src/modules/auth/auth.service.ts
 import * as crypto from 'crypto';
+import * as argon2 from 'argon2';
 
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -238,5 +239,37 @@ export class AuthService {
   // 5. Session Termination Logic for Logout and Token Revocation
   async clearSession(sessionId: string): Promise<void> {
     await this.authRepository.deleteSession(sessionId);
+  }
+
+  // Password Reset Flow
+  async generatePasswordResetToken(email: string): Promise<string | null> {
+    const user = await this.authRepository.findUserByEmail(email);
+    if (!user) return null; // Silent fail to avoid email enumeration
+
+    const identity = await this.authRepository.findEmailPasswordIdentity(user.id);
+    if (!identity) return null;
+
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+    await this.authRepository.updateIdentityResetToken(identity.id, token, expiry);
+    return token;
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<boolean> {
+    const identity = await this.authRepository.findIdentityByResetToken(token);
+    if (!identity) {
+      return false;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const resetTokenExpiry = (identity as any).resetTokenExpiry as Date | null;
+    if (!resetTokenExpiry || resetTokenExpiry < new Date()) {
+      return false;
+    }
+
+    const hashedPassword = await argon2.hash(newPassword);
+    await this.authRepository.updateIdentityPassword(identity.id, hashedPassword);
+    return true;
   }
 }

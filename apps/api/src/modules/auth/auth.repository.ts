@@ -271,4 +271,48 @@ export class AuthRepository {
       },
     });
   }
+
+  // Password Reset Methods
+  async findEmailPasswordIdentity(userId: string): Promise<Identity | null> {
+    return this.prisma.identity.findFirst({
+      where: {
+        userId,
+        provider: 'EMAIL_PASSWORD',
+      },
+    });
+  }
+
+  async findIdentityByResetToken(token: string): Promise<Identity | null> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (this.prisma.identity as any).findUnique({
+      where: { reset_token: token },
+    });
+  }
+
+  async updateIdentityResetToken(
+    identityId: string,
+    token: string,
+    expiry: Date,
+  ): Promise<Identity> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (this.prisma.identity as any).update({
+      where: { id: identityId },
+      data: {
+        reset_token: token,
+        reset_token_expiry: expiry,
+      },
+    });
+  }
+
+  async updateIdentityPassword(identityId: string, hashedPassword: string): Promise<Identity> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (this.prisma.identity as any).update({
+      where: { id: identityId },
+      data: {
+        passwordHash: hashedPassword,
+        reset_token: null,
+        reset_token_expiry: null,
+      },
+    });
+  }
 }

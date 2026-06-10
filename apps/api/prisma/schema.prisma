@@ -137,12 +137,14 @@ model User {
 // Multiple identities may point to the same user.
 // -----------------------------------------------------------------------------
 model Identity {
-  id                String           @id @default(dbgenerated("'iden_' ||gen_random_uuid()::text")) 
+  id                String           @id @default(dbgenerated("'iden_' ||gen_random_uuid()::text"))
   userId            String           @map("user_id") @db.VarChar(255)
-  provider          IdentityProvider 
+  provider          IdentityProvider
   providerId        String    // Stable unique ID returned by the auth provider. Used to link external identities to internal users.
   passwordHash      String?   // Hashed password (only used for EMAIL_PASSWORD provider; null for OAuth/SSO identities)
   providerEmail     String?
+  resetToken        String?   @unique @map("reset_token") // Password reset token, single-use and time-limited
+  resetTokenExpiry  DateTime? @map("reset_token_expiry") @db.Timestamptz(6) // Expiry time for reset token (15 min from generation)
 
   createdAt         DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt         DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
