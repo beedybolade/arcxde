@@ -68,7 +68,8 @@ export class DomainError extends Error {
       this.details = options.details;
     }
 
-    // V8 stack capture — captureStackTrace is V8-specific, guard before calling
+    // V8 stack capture — safe to call if available
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     Error.captureStackTrace?.(this, DomainError);
   }
 

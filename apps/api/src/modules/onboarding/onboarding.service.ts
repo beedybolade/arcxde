@@ -8,13 +8,11 @@
  *   - Supports a no-auth flow: if no userId is provided, a temporary user is
  *     created and the generated id is returned so the client can persist it.
  */
+import type { OnboardingQuestion, OnboardingResult, SubmitOnboardingBody } from '@app/contracts';
 import { Injectable } from '@nestjs/common';
 
 import { DomainError } from '../../common/errors/domain-error.js';
-
 import { OnboardingRepository } from './onboarding.repository.js';
-
-import type { OnboardingQuestion, OnboardingResult, SubmitOnboardingBody } from '@app/contracts';
 
 @Injectable()
 export class OnboardingService {

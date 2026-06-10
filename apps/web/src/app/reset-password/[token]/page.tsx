@@ -107,7 +107,7 @@ export default function ResetPasswordPage() {
           Reset your password
         </h1>
         <p style={{ color: '#666', marginBottom: '32px' }}>
-          Enter your new password below. Make sure it's at least 8 characters long.
+          Enter your new password below. Make sure it&apos;s at least 8 characters long.
         </p>
 
         <form onSubmit={handleSubmit}>

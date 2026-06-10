@@ -39,6 +39,7 @@ export class AuthRepository {
       where: { email },
     });
   }
+
   async findUserById(id: string) {
     return this.prisma.user.findUnique({
       where: { id },
@@ -73,7 +74,7 @@ export class AuthRepository {
       const user = await tx.user.create({
         data: {
           email: input.email,
-          fullName: `${input.firstName || ''} ${input.lastName || ''}`.trim() || null,
+          fullName: `${input.firstName ?? ''} ${input.lastName ?? ''}`.trim() || null,
         },
       });
 
@@ -111,12 +112,12 @@ export class AuthRepository {
         return tx.user.findUniqueOrThrow({ where: { id: data.userId } });
       }
 
-      // BRANCH B: Brand New User -> Create User + Identity + Membership atomatically
+      // BRANCH B: Brand New User -> Create User + Identity + Membership atomically
       const newUser = await tx.user.create({
         data: {
           email: data.email,
-          fullName: data.fullName || null,
-          avatarUrl: data.avatarUrl || null,
+          fullName: data.fullName ?? null,
+          avatarUrl: data.avatarUrl ?? null,
         },
       });
 
@@ -135,17 +136,15 @@ export class AuthRepository {
           data: {
             userId: newUser.id,
             organizationId: data.organizationId,
-            role: 'admin', // Default role assignment; adjust as necessary
+            role: 'admin',
           },
         });
       }
 
-      // Return the fully formed user record back to the calling service layer
       return newUser;
     });
   }
 
-  // 3. Complete atomic pipeline: Provision a brand new user account along with their initial verification identity link
   async createNewUserWithIdentity(profile: NormalizedProfile): Promise<User> {
     if (!profile.email) {
       throw new Error('Email is mandatory to execute primary user creation cascades.');
@@ -167,7 +166,6 @@ export class AuthRepository {
     });
   }
 
-  // 4. Attach an additional identification mechanism to an existing core User profile (Account Linking)
   async linkCredentialsIdentityToExistingUser(params: {
     userId: string;
     provider: 'EMAIL_PASSWORD';
@@ -186,7 +184,6 @@ export class AuthRepository {
     });
   }
 
-  // 5. Explicit email verification flag updates
   async updateUserEmailVerification(userId: string, isVerified: boolean): Promise<User> {
     return this.prisma.user.update({
       where: { id: userId },
@@ -194,9 +191,7 @@ export class AuthRepository {
     });
   }
 
-  // 6. Cross-reference multi-domain routing tables to automatically intercept workspace associations
   async findOrganizationByDomain(domain: string): Promise<WorkspaceMatchResult | null> {
-    // Explicitly querying through the unique domain registry mapping table per specification
     const domainRegistry = await this.prisma.organizationDomain.findUnique({
       where: { domain },
       select: { organizationId: true },
@@ -205,18 +200,16 @@ export class AuthRepository {
     return domainRegistry;
   }
 
-  // 7. Auto-join user to an organization profile registry
   async createMembership(userId: string, organizationId: string): Promise<void> {
     await this.prisma.membership.create({
       data: {
         userId,
         organizationId,
-        role: 'admin', // Default access tier
+        role: 'admin',
       },
     });
   }
 
-  // 8. Session Persistence Layer tracking (hashed token operations)
   async createSession(data: SessionCreationData) {
     return this.prisma.session.create({
       data: {
@@ -233,11 +226,7 @@ export class AuthRepository {
       include: { user: true },
     });
   }
-  /**
-   * Updates an existing session's token hash after token generation
-   * @param sessionId The database-generated 'ses_...' ID
-   * @param tokenHash The cryptographic hash of the new refresh token
-   */
+
   async updateSessionHash(sessionId: string, tokenHash: string): Promise<void> {
     await this.prisma.session.update({
       where: {
@@ -250,7 +239,6 @@ export class AuthRepository {
   }
 
   async deleteSession(sessionId: string): Promise<void> {
-    console.log('🗑️ [Logout Debug] Target Session ID from Token:', sessionId);
     await this.prisma.session.deleteMany({
       where: {
         id: sessionId,
@@ -258,21 +246,17 @@ export class AuthRepository {
     });
   }
 
-  /**
-   * Cleans up all dead/expired sessions for a specific user in one database command
-   */
   async deleteExpiredSessions(userId: string): Promise<Prisma.BatchPayload> {
     return this.prisma.session.deleteMany({
       where: {
         userId: userId,
         expiresAt: {
-          lt: new Date(), // lt = Less Than the exact current moment
+          lt: new Date(),
         },
       },
     });
   }
 
-  // Password Reset Methods
   async findEmailPasswordIdentity(userId: string): Promise<Identity | null> {
     return this.prisma.identity.findFirst({
       where: {
@@ -283,9 +267,8 @@ export class AuthRepository {
   }
 
   async findIdentityByResetToken(token: string): Promise<Identity | null> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (this.prisma.identity as any).findUnique({
-      where: { reset_token: token },
+    return this.prisma.identity.findUnique({
+      where: { resetToken: token },
     });
   }
 
@@ -294,24 +277,22 @@ export class AuthRepository {
     token: string,
     expiry: Date,
   ): Promise<Identity> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (this.prisma.identity as any).update({
+    return this.prisma.identity.update({
       where: { id: identityId },
       data: {
-        reset_token: token,
-        reset_token_expiry: expiry,
+        resetToken: token,
+        resetTokenExpiry: expiry,
       },
     });
   }
 
   async updateIdentityPassword(identityId: string, hashedPassword: string): Promise<Identity> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (this.prisma.identity as any).update({
+    return this.prisma.identity.update({
       where: { id: identityId },
       data: {
         passwordHash: hashedPassword,
-        reset_token: null,
-        reset_token_expiry: null,
+        resetToken: null,
+        resetTokenExpiry: null,
       },
     });
   }

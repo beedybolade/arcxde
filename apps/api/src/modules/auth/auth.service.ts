@@ -1,16 +1,14 @@
-// src/modules/auth/auth.service.ts
 import * as crypto from 'crypto';
 import * as argon2 from 'argon2';
 
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { Prisma } from '@prisma/client';
+import type { Prisma } from '@prisma/client';
 
 import { PrismaService } from '../prisma/prisma.service.js';
-
+import type { NormalizedProfile } from './models/auth-registration.interface.js';
 import { AuthRepository } from './auth.repository.js';
 import { IdentityResolver } from './identity/identity.resolver.js';
-import { NormalizedProfile } from './models/auth-registration.interface.js';
 
 @Injectable()
 export class AuthService {
@@ -20,23 +18,17 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  // Primary service method to handle both registration and login flows for OAuth providers; abstracts the entire process into a single method for controller use
   async registerOrLoginWithProvider(profile: NormalizedProfile) {
     let user = null;
-    // 1. Attempt to resolve the incoming profile to an existing user identity or account
     const identityResult = await this.resolveAccount(profile);
 
-    // 🌲 UPDATE USER FLAGS BEFORE GENERATING THE SESSION 🌲
     if (identityResult.isNewUser) {
-      // If the account was just created, ensure its flags bypass manual entry requirements
       await this.authRepository.updateUserFlags(identityResult.userId, {
         emailVerified: true,
         registrationCompleted: true,
-        onboardingCompleted: false, // Ready for the questionnaire
+        onboardingCompleted: false,
       });
     } else {
-      // For returning users who might have previously dropped out on manual verification,
-      // logging in via OAuth retroactively completes their registration.
       const existingUser = await this.authRepository.findUserById(identityResult.userId);
 
       if (existingUser && (!existingUser.emailVerified || !existingUser.registrationCompleted)) {
@@ -47,13 +39,12 @@ export class AuthService {
       }
     }
 
-    // 2. With a resolved user context, generate a new authenticated session with token rotation
     const tokens = await this.createAuthenticatedSession(identityResult.userId);
 
     if (!identityResult.isNewUser && profile.email) {
       user = await this.authRepository.findUserByEmail(profile.email);
     }
-    // 3. Return the generated tokens along with a flag indicating if this is a new user for frontend onboarding flows
+
     return {
       tokens,
       isNewUser: identityResult.isNewUser,
@@ -96,8 +87,8 @@ export class AuthService {
     const targetUser = await this.authRepository.upsertUserIdentityAndMembership({
       userId: resolution.type === 'EXISTING_USER_NO_IDENTITY' ? resolution.userId : null, // Passing an ID triggers an Identity Link; null triggers User Creation
       email: resolution.email,
-      fullName: profile.fullName || null,
-      avatarUrl: profile.avatarUrl || null,
+      fullName: profile.fullName ?? null,
+      avatarUrl: profile.avatarUrl ?? null,
       provider: profile.provider,
       providerId: profile.providerId,
       organizationId: matchedOrgId,
@@ -109,7 +100,6 @@ export class AuthService {
     };
   }
 
-  // Method to create a new authenticated session for a user, including cleanup of expired sessions and secure token generation with hashing for storage
   public async createAuthenticatedSession(
     userId: string,
   ): Promise<{ accessToken: string; refreshToken: string }> {
@@ -129,38 +119,33 @@ export class AuthService {
 
     return tokens;
   }
-  /**
-   * 💡 NEW METHOD: Transaction-aware session manager
-   * Accepts a generic Prisma client or a localized Transaction client ('tx')
-   */
+
   async createAuthenticatedSessionWithTx(
     userId: string,
-    dbClient: Prisma.TransactionClient | PrismaService, // Accepts either context safely
+    dbClient: Prisma.TransactionClient | PrismaService,
   ) {
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(
         { sub: userId },
         {
           expiresIn: '15m',
-          secret: process.env.JWT_ACCESS_SECRET || 'fallback_development_secret_access_key',
+          secret: process.env.JWT_ACCESS_SECRET ?? 'fallback_development_secret_access_key',
         },
       ),
       this.jwtService.signAsync(
         { sub: userId },
         {
           expiresIn: '7d',
-          secret: process.env.JWT_REFRESH_SECRET || 'fallback_development_secret_refresh_key',
+          secret: process.env.JWT_REFRESH_SECRET ?? 'fallback_development_secret_refresh_key',
         },
       ),
     ]);
 
-    // 2. 💡 CRITICAL: Save the session using 'dbClient', NOT 'this.prisma'
-    // This links the session creation into the parent transaction rollback block!
     await dbClient.session.create({
       data: {
         userId,
-        tokenHash: refreshToken, // Store the raw token hash directly since this method is only called internally after generation
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days window
+        tokenHash: refreshToken,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       },
     });
 
@@ -170,7 +155,6 @@ export class AuthService {
     };
   }
 
-  // --- REFRESH TOKEN ROTATION ENGINE ---
   async refreshSession(rawRefreshToken: string) {
     const currentHash = this.hashToken(rawRefreshToken);
     const session = await this.authRepository.findSessionByHash(currentHash);
@@ -182,7 +166,6 @@ export class AuthService {
       throw new UnauthorizedException('Session has expired or is invalid.');
     }
 
-    // Cycle tokens out immediately to enforce rotation rules
     await this.authRepository.deleteSession(session.id);
 
     const newTokens = await this.generateSessionTokens(session.userId, session.id);
@@ -241,16 +224,19 @@ export class AuthService {
     await this.authRepository.deleteSession(sessionId);
   }
 
-  // Password Reset Flow
   async generatePasswordResetToken(email: string): Promise<string | null> {
     const user = await this.authRepository.findUserByEmail(email);
-    if (!user) return null; // Silent fail to avoid email enumeration
+    if (!user) {
+      return null;
+    }
 
     const identity = await this.authRepository.findEmailPasswordIdentity(user.id);
-    if (!identity) return null;
+    if (!identity) {
+      return null;
+    }
 
     const token = crypto.randomBytes(32).toString('hex');
-    const expiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+    const expiry = new Date(Date.now() + 15 * 60 * 1000);
 
     await this.authRepository.updateIdentityResetToken(identity.id, token, expiry);
     return token;
@@ -262,9 +248,7 @@ export class AuthService {
       return false;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const resetTokenExpiry = (identity as any).resetTokenExpiry as Date | null;
-    if (!resetTokenExpiry || resetTokenExpiry < new Date()) {
+    if (!identity.resetTokenExpiry || identity.resetTokenExpiry < new Date()) {
       return false;
     }
 

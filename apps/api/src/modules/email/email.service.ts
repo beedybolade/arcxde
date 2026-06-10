@@ -12,7 +12,7 @@ export class EmailService {
   constructor(private readonly configService: ConfigService) {
     const apiKey = this.configService.get<string>('RESEND_API_KEY');
     this.fromAddress =
-      this.configService.get<string>('EMAIL_FROM_ADDRESS') || 'no-reply@arcxde.com';
+      this.configService.get<string>('EMAIL_FROM_ADDRESS') ?? 'no-reply@arcxde.com';
 
     if (!apiKey) {
       this.logger.warn('⚠️ RESEND_API_KEY is missing. Inbound verification emails will fail.');
@@ -63,7 +63,7 @@ export class EmailService {
         throw new InternalServerErrorException('Email delivery engine failed.');
       }
 
-      this.logger.log(`🎉 Verification link successfully dispatched to ${to} (ID: ${data?.id})`);
+      this.logger.log(`🎉 Verification link successfully dispatched to ${to} (ID: ${data.id})`);
     } catch (err) {
       this.logger.error(`Unexpected error during email transmission to ${to}`, err);
       throw new InternalServerErrorException('Could not process authentication mailer pipeline.');
@@ -110,7 +110,7 @@ export class EmailService {
         throw new InternalServerErrorException('Email delivery engine failed.');
       }
 
-      this.logger.log(`🔑 Login magic link successfully dispatched to ${to} (ID: ${data?.id})`);
+      this.logger.log(`🔑 Login magic link successfully dispatched to ${to} (ID: ${data.id})`);
     } catch (err) {
       this.logger.error(`Unexpected error during login email transmission to ${to}`, err);
       throw new InternalServerErrorException('Could not process authentication mailer pipeline.');
@@ -159,7 +159,7 @@ export class EmailService {
         throw new InternalServerErrorException('Email delivery engine failed.');
       }
 
-      this.logger.log(`🔐 Password reset link successfully dispatched to ${to} (ID: ${data?.id})`);
+      this.logger.log(`🔐 Password reset link successfully dispatched to ${to} (ID: ${data.id})`);
     } catch (err) {
       this.logger.error(`Unexpected error during password reset email transmission to ${to}`, err);
       throw new InternalServerErrorException('Could not process authentication mailer pipeline.');

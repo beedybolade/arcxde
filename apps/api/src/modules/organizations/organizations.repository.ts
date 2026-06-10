@@ -6,12 +6,11 @@
  *
  * See docs/architecture/backend.md "Layering".
  */
+import type { Organization } from '@app/contracts';
+import type { Organization as PrismaOrganization } from '@prisma/client';
 import { Injectable } from '@nestjs/common';
 
 import { PrismaService } from '../prisma/prisma.service.js';
-
-import type { Organization } from '@app/contracts';
-import type { Organization as PrismaOrganization } from '@prisma/client';
 
 export interface CreateOrganizationInput {
   name: string;

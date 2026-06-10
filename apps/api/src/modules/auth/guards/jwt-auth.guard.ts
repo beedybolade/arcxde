@@ -12,18 +12,9 @@ import { AuthGuard } from '@nestjs/passport';
  */
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
-  // 🚀 Override handleRequest to capture hidden Passport errors
   override handleRequest<TUser = unknown>(err: unknown, user: TUser, info: unknown): TUser {
-    if (info) {
-      console.log('\n🔒 [JWT Guard Debug] --- Verification Failure ---');
-      console.log('Reason:', (info as { message?: string }).message);
-      console.log('Details:', info);
-      console.log('---------------------------------------------\n');
-    }
-
     if (err || !user) {
-      // Return the specific error message to Swagger instead of a generic "Unauthorized"
-      const message = (info as { message?: string })?.message || 'Unauthorized';
+      const message = (info as { message?: string }).message ?? 'Unauthorized';
       throw err instanceof Error ? err : new UnauthorizedException(message);
     }
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return

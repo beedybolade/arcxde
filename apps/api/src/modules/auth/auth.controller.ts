@@ -11,38 +11,36 @@
  * Response shapes intentionally match the contract envelopes in
  * docs/conventions/api-design.md.
  */
-import {
-  tokenRefreshSchema,
-  type TokenRefreshBody,
-  testEmailSchema,
-  type TestEmailSchema,
-} from '@app/contracts';
-import { ForgotPasswordDto } from './dto/forgot-password.dto.js';
-import { ResetPasswordDto } from './dto/reset-password.dto.js';
+import type { FastifyReply, FastifyRequest } from 'fastify';
 
-import type { FastifyRequest, FastifyReply } from 'fastify';
 import {
+  testEmailSchema,
+  tokenRefreshSchema,
+  type TestEmailSchema,
+  type TokenRefreshBody,
+} from '@app/contracts';
+import {
+  Body,
   Controller,
   Get,
   HttpCode,
   Post,
   Req,
   Res,
-  UseGuards,
-  Body,
   UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiTags, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { ApiZodBody } from '../../common/swagger/zod-swagger.decorator.js';
 import { ZodBody } from '../../common/validation/zod.decorators.js';
-import { EmailVerificationService } from '../email/verification/email-verification.service.js';
 import { EmailService } from '../email/email.service.js';
-
+import { EmailVerificationService } from '../email/verification/email-verification.service.js';
 import { AuthService } from './auth.service.js';
+import { ForgotPasswordDto } from './dto/forgot-password.dto.js';
+import { ResetPasswordDto } from './dto/reset-password.dto.js';
 import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
-
 import type { NormalizedProfile } from './models/auth-registration.interface.js';
 
 interface TokenResponse {
