@@ -5,7 +5,6 @@
  * Keeps weights internal — the service computes the score; the controller
  * never sees optionWeights.
  */
-import type { OnboardingQuestion } from '@app/contracts';
 import { Injectable } from '@nestjs/common';
 
 import { PrismaService } from '../prisma/prisma.service.js';
