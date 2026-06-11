@@ -80,7 +80,11 @@ export class OnboardingService {
 
 function deriveProfile(correctCount: number): string {
   const threshold = 18;
-  if (correctCount >= threshold) return 'advanced';
-  if (correctCount >= 10) return 'intermediate';
+  if (correctCount >= threshold) {
+    return 'advanced';
+  }
+  if (correctCount >= 10) {
+    return 'intermediate';
+  }
   return 'beginner';
 }

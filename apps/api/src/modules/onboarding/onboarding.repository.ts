@@ -7,9 +7,9 @@
  */
 import { Injectable } from '@nestjs/common';
 
-import { PrismaService } from '../prisma/prisma.service.js';
-
 import type { OnboardingQuestion } from '@app/contracts';
+
+import { PrismaService } from '../prisma/prisma.service.js';
 
 export interface QuestionForScoring {
   id: string;
