@@ -2,7 +2,22 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Button } from '@/components/ui';
+import { SlantEgg } from '@/components/slant-egg';
+
+const FONT = "'Geist', system-ui, sans-serif";
+
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '20px 22px',
+  borderRadius: 14,
+  border: '1px solid rgba(255,255,255,0.18)',
+  background: 'transparent',
+  color: '#ece9e3',
+  fontFamily: FONT,
+  fontSize: 16,
+  outline: 'none',
+  boxSizing: 'border-box',
+};
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -23,9 +38,7 @@ export default function ForgotPasswordPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
       });
-
       const data = await res.json();
-
       if (res.ok) {
         setMessage(data.message);
         setEmail('');
@@ -41,99 +54,163 @@ export default function ForgotPasswordPage() {
 
   return (
     <div
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-      }}
+      className="flex min-h-screen items-center justify-center px-11 py-16"
+      style={{ background: '#1a1918', fontFamily: FONT }}
     >
-      <div style={{ width: '100%', maxWidth: '400px' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '8px' }}>
-          Forgot your password?
-        </h1>
-        <p style={{ color: '#666', marginBottom: '32px' }}>
-          Enter your email address and we&apos;ll send you a link to reset your password.
-        </p>
+      <div className="grid w-full max-w-[1180px] grid-cols-1 items-center gap-20 lg:grid-cols-2">
+        {/* Brand panel */}
+        <div className="flex flex-col items-center text-center">
+          <SlantEgg size="lg" showText style={{ marginBottom: 34 }} />
+          <h2
+            style={{
+              fontFamily: FONT,
+              fontSize: 34,
+              fontWeight: 400,
+              color: '#d9d6d0',
+              margin: '0 0 24px',
+            }}
+          >
+            Lorem ipsum dolor sit amet
+          </h2>
+          <p
+            style={{
+              fontFamily: FONT,
+              fontSize: 16,
+              lineHeight: 1.55,
+              color: 'rgba(255,255,255,0.4)',
+              maxWidth: 520,
+              margin: 0,
+            }}
+          >
+            Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
+            commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum
+            dolore eu fugiat nulla pariatur.
+          </p>
+        </div>
 
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
-              Email address
-            </label>
-            <input
-              type="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
+        {/* Form panel */}
+        <div className="flex flex-col gap-7">
+          <div
+            style={{
+              border: '1px solid rgba(255,255,255,0.16)',
+              borderRadius: 34,
+              padding: '46px 42px',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
+            <h1
               style={{
-                width: '100%',
-                padding: '10px 12px',
-                border: '1px solid #e0e0e0',
-                borderRadius: '6px',
-                fontSize: '14px',
-                boxSizing: 'border-box',
+                fontFamily: FONT,
+                fontSize: 34,
+                fontWeight: 500,
+                letterSpacing: '-0.5px',
+                color: '#ece9e3',
+                textAlign: 'center',
+                margin: 0,
               }}
-            />
+            >
+              Forgot your password?
+            </h1>
+            <p
+              style={{
+                fontFamily: FONT,
+                fontSize: 15,
+                fontWeight: 400,
+                lineHeight: 1.5,
+                color: 'rgba(255,255,255,0.5)',
+                textAlign: 'center',
+                margin: '20px auto 34px',
+                maxWidth: 420,
+              }}
+            >
+              Enter your email address and we&apos;ll send you a link to reset your password.
+            </p>
+
+            <form
+              onSubmit={handleSubmit}
+              style={{ display: 'flex', flexDirection: 'column', gap: 20 }}
+            >
+              <input
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                disabled={isLoading}
+                style={inputStyle}
+              />
+
+              {message && (
+                <div
+                  style={{
+                    padding: 12,
+                    fontSize: 14,
+                    color: '#6ee7b7',
+                    background: 'rgba(110,231,183,0.08)',
+                    borderRadius: 12,
+                    border: '1px solid rgba(110,231,183,0.25)',
+                  }}
+                >
+                  {message}
+                </div>
+              )}
+
+              {error && (
+                <div
+                  style={{
+                    padding: 12,
+                    fontSize: 14,
+                    color: '#ff8a8a',
+                    background: 'rgba(255,80,80,0.08)',
+                    borderRadius: 12,
+                    border: '1px solid rgba(255,80,80,0.25)',
+                  }}
+                >
+                  {error}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                style={{
+                  width: '100%',
+                  marginTop: 8,
+                  padding: '20px',
+                  borderRadius: 18,
+                  border: 'none',
+                  background: 'linear-gradient(180deg,#fbf8f1,#ece7db)',
+                  color: '#1a1917',
+                  fontFamily: FONT,
+                  fontSize: 17,
+                  fontWeight: 500,
+                  cursor: isLoading ? 'default' : 'pointer',
+                  opacity: isLoading ? 0.5 : 1,
+                  boxShadow: '0 12px 30px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.7)',
+                  transition: 'opacity .15s ease',
+                }}
+              >
+                {isLoading ? 'Sending...' : 'Send Reset Link'}
+              </button>
+            </form>
           </div>
 
-          <Button
-            type="submit"
-            disabled={isLoading}
+          <p
             style={{
-              width: '100%',
-              backgroundColor: '#09090b',
-              color: 'white',
-              padding: '10px',
-              borderRadius: '6px',
-              border: 'none',
-              fontWeight: '500',
-              cursor: isLoading ? 'not-allowed' : 'pointer',
-              opacity: isLoading ? 0.5 : 1,
+              fontFamily: FONT,
+              fontSize: 14,
+              color: 'rgba(255,255,255,0.4)',
+              textAlign: 'center',
+              margin: 0,
             }}
           >
-            {isLoading ? 'Sending...' : 'Send Reset Link'}
-          </Button>
-        </form>
-
-        {message && (
-          <div
-            style={{
-              marginTop: '16px',
-              padding: '12px',
-              backgroundColor: '#f0fdf4',
-              color: '#166534',
-              borderRadius: '6px',
-              fontSize: '14px',
-            }}
-          >
-            {message}
-          </div>
-        )}
-
-        {error && (
-          <div
-            style={{
-              marginTop: '16px',
-              padding: '12px',
-              backgroundColor: '#fef2f2',
-              color: '#991b1b',
-              borderRadius: '6px',
-              fontSize: '14px',
-            }}
-          >
-            {error}
-          </div>
-        )}
-
-        <p style={{ marginTop: '24px', textAlign: 'center', fontSize: '14px' }}>
-          Remember your password?{' '}
-          <Link href="/signup" style={{ color: '#2563eb', textDecoration: 'none' }}>
-            Back to login
-          </Link>
-        </p>
+            Remember your password?{' '}
+            <Link href="/signup" style={{ color: '#f3a9c0', textDecoration: 'underline' }}>
+              Back to sign in
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

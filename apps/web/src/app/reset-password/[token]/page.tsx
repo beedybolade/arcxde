@@ -2,7 +2,34 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Button } from '@/components/ui';
+import Link from 'next/link';
+import { SlantEgg } from '@/components/slant-egg';
+
+const FONT = "'Geist', system-ui, sans-serif";
+
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '16px 18px',
+  borderRadius: 14,
+  border: '1px solid rgba(255,255,255,0.18)',
+  background: 'transparent',
+  color: '#ece9e3',
+  fontFamily: FONT,
+  fontSize: 16,
+  outline: 'none',
+  boxSizing: 'border-box',
+};
+
+const labelStyle: React.CSSProperties = {
+  display: 'block',
+  fontFamily: FONT,
+  fontSize: 13,
+  fontWeight: 500,
+  letterSpacing: '0.04em',
+  textTransform: 'uppercase',
+  color: 'rgba(255,255,255,0.55)',
+  marginBottom: 8,
+};
 
 export default function ResetPasswordPage() {
   const params = useParams();
@@ -30,7 +57,6 @@ export default function ResetPasswordPage() {
       setError('Passwords do not match.');
       return;
     }
-
     if (password.length < 8) {
       setError('Password must be at least 8 characters long.');
       return;
@@ -45,14 +71,11 @@ export default function ResetPasswordPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, newPassword: password }),
       });
-
       const data = await res.json();
-
       if (res.ok) {
         setMessage(data.message);
         setPassword('');
         setConfirm('');
-        // Redirect to signup (login) after 2 seconds
         setTimeout(() => router.push('/signup'), 2000);
       } else {
         setError(data.message || 'Failed to reset password. The link may have expired.');
@@ -67,26 +90,43 @@ export default function ResetPasswordPage() {
   if (!token) {
     return (
       <div
-        style={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '24px',
-        }}
+        className="flex min-h-screen items-center justify-center px-6"
+        style={{ background: '#1a1918' }}
       >
-        <div style={{ width: '100%', maxWidth: '400px', textAlign: 'center' }}>
+        <div style={{ textAlign: 'center', maxWidth: 480 }}>
+          <SlantEgg size="lg" showText style={{ margin: '0 auto 44px' }} />
           <h1
-            style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '16px', color: '#991b1b' }}
+            style={{
+              fontFamily: FONT,
+              fontSize: 34,
+              fontWeight: 500,
+              color: '#ff8a8a',
+              marginBottom: 16,
+            }}
           >
             Invalid Link
           </h1>
-          <p style={{ marginBottom: '24px', color: '#666' }}>
+          <p
+            style={{
+              fontFamily: FONT,
+              fontSize: 16,
+              color: 'rgba(255,255,255,0.55)',
+              marginBottom: 32,
+            }}
+          >
             This password reset link is invalid or has expired.
           </p>
-          <a href="/forgot-password" style={{ color: '#2563eb', textDecoration: 'none' }}>
+          <Link
+            href="/forgot-password"
+            style={{
+              fontFamily: FONT,
+              fontSize: 15,
+              color: '#f3a9c0',
+              textDecoration: 'underline',
+            }}
+          >
             Request a new reset link
-          </a>
+          </Link>
         </div>
       </div>
     );
@@ -94,118 +134,162 @@ export default function ResetPasswordPage() {
 
   return (
     <div
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-      }}
+      className="flex min-h-screen items-center justify-center px-11 py-16"
+      style={{ background: '#1a1918', fontFamily: FONT }}
     >
-      <div style={{ width: '100%', maxWidth: '400px' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '8px' }}>
-          Reset your password
-        </h1>
-        <p style={{ color: '#666', marginBottom: '32px' }}>
-          Enter your new password below. Make sure it&apos;s at least 8 characters long.
-        </p>
+      <div className="grid w-full max-w-[1180px] grid-cols-1 items-center gap-20 lg:grid-cols-2">
+        {/* Brand panel */}
+        <div className="flex flex-col items-center text-center">
+          <SlantEgg size="lg" showText style={{ marginBottom: 34 }} />
+          <h2
+            style={{
+              fontFamily: FONT,
+              fontSize: 34,
+              fontWeight: 400,
+              color: '#d9d6d0',
+              margin: '0 0 24px',
+            }}
+          >
+            Lorem ipsum dolor sit amet
+          </h2>
+          <p
+            style={{
+              fontFamily: FONT,
+              fontSize: 16,
+              lineHeight: 1.55,
+              color: 'rgba(255,255,255,0.4)',
+              maxWidth: 520,
+              margin: 0,
+            }}
+          >
+            Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
+            commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum
+            dolore eu fugiat nulla pariatur.
+          </p>
+        </div>
 
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
-              New password
-            </label>
-            <input
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
+        {/* Form panel */}
+        <div
+          style={{
+            border: '1px solid rgba(255,255,255,0.16)',
+            borderRadius: 34,
+            padding: '46px 42px',
+          }}
+        >
+          <h1
+            style={{
+              fontFamily: FONT,
+              fontSize: 34,
+              fontWeight: 500,
+              letterSpacing: '-0.5px',
+              color: '#ece9e3',
+              textAlign: 'center',
+              margin: 0,
+            }}
+          >
+            Reset your password
+          </h1>
+          <p
+            style={{
+              fontFamily: FONT,
+              fontSize: 15,
+              lineHeight: 1.5,
+              color: 'rgba(255,255,255,0.5)',
+              textAlign: 'center',
+              margin: '18px auto 34px',
+              maxWidth: 420,
+            }}
+          >
+            Enter your new password below. Make sure it&apos;s at least 8 characters long.
+          </p>
+
+          <form
+            onSubmit={handleSubmit}
+            style={{ display: 'flex', flexDirection: 'column', gap: 20 }}
+          >
+            <div>
+              <label style={labelStyle}>New password</label>
+              <input
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                disabled={isLoading}
+                style={{ ...inputStyle, opacity: isLoading ? 0.6 : 1 }}
+              />
+            </div>
+
+            <div>
+              <label style={labelStyle}>Confirm password</label>
+              <input
+                type="password"
+                placeholder="••••••••"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                required
+                disabled={isLoading}
+                style={{ ...inputStyle, opacity: isLoading ? 0.6 : 1 }}
+              />
+            </div>
+
+            {message && (
+              <div
+                style={{
+                  padding: 12,
+                  fontSize: 14,
+                  color: '#6ee7b7',
+                  background: 'rgba(110,231,183,0.08)',
+                  borderRadius: 12,
+                  border: '1px solid rgba(110,231,183,0.25)',
+                }}
+              >
+                {message}
+                <p style={{ marginTop: 8, fontSize: 12, opacity: 0.75 }}>
+                  Redirecting to sign in...
+                </p>
+              </div>
+            )}
+
+            {error && (
+              <div
+                style={{
+                  padding: 12,
+                  fontSize: 14,
+                  color: '#ff8a8a',
+                  background: 'rgba(255,80,80,0.08)',
+                  borderRadius: 12,
+                  border: '1px solid rgba(255,80,80,0.25)',
+                }}
+              >
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
               disabled={isLoading}
               style={{
                 width: '100%',
-                padding: '10px 12px',
-                border: '1px solid #e0e0e0',
-                borderRadius: '6px',
-                fontSize: '14px',
-                boxSizing: 'border-box',
-                opacity: isLoading ? 0.6 : 1,
+                marginTop: 8,
+                padding: '20px',
+                borderRadius: 18,
+                border: 'none',
+                background: 'linear-gradient(180deg,#fbf8f1,#ece7db)',
+                color: '#1a1917',
+                fontFamily: FONT,
+                fontSize: 17,
+                fontWeight: 500,
+                cursor: isLoading ? 'default' : 'pointer',
+                opacity: isLoading ? 0.5 : 1,
+                boxShadow: '0 12px 30px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.7)',
+                transition: 'opacity .15s ease',
               }}
-            />
-          </div>
-
-          <div style={{ marginBottom: '24px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>
-              Confirm password
-            </label>
-            <input
-              type="password"
-              placeholder="••••••••"
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-              required
-              disabled={isLoading}
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                border: '1px solid #e0e0e0',
-                borderRadius: '6px',
-                fontSize: '14px',
-                boxSizing: 'border-box',
-                opacity: isLoading ? 0.6 : 1,
-              }}
-            />
-          </div>
-
-          <Button
-            type="submit"
-            disabled={isLoading}
-            style={{
-              width: '100%',
-              backgroundColor: '#09090b',
-              color: 'white',
-              padding: '10px',
-              borderRadius: '6px',
-              border: 'none',
-              fontWeight: '500',
-              cursor: isLoading ? 'not-allowed' : 'pointer',
-              opacity: isLoading ? 0.5 : 1,
-            }}
-          >
-            {isLoading ? 'Resetting...' : 'Reset Password'}
-          </Button>
-        </form>
-
-        {message && (
-          <div
-            style={{
-              marginTop: '16px',
-              padding: '12px',
-              backgroundColor: '#f0fdf4',
-              color: '#166534',
-              borderRadius: '6px',
-              fontSize: '14px',
-            }}
-          >
-            {message}
-            <p style={{ marginTop: '8px', fontSize: '12px' }}>Redirecting to login...</p>
-          </div>
-        )}
-
-        {error && (
-          <div
-            style={{
-              marginTop: '16px',
-              padding: '12px',
-              backgroundColor: '#fef2f2',
-              color: '#991b1b',
-              borderRadius: '6px',
-              fontSize: '14px',
-            }}
-          >
-            {error}
-          </div>
-        )}
+            >
+              {isLoading ? 'Resetting...' : 'Reset Password'}
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );

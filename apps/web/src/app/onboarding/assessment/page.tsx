@@ -3,9 +3,24 @@
 import { useState, useEffect } from 'react';
 import { SlantEgg } from '@/components/slant-egg';
 import { AssessmentQuestion } from '@/components/assessment-question';
-import { AssessmentProgress } from '@/components/assessment-progress';
 
-const FONT = "'Suisse Int\\'l', system-ui, sans-serif";
+const FONT = "'Geist', system-ui, sans-serif";
+
+const continueBtnStyle = (enabled: boolean): React.CSSProperties => ({
+  width: '100%',
+  padding: '22px',
+  borderRadius: 18,
+  border: 'none',
+  cursor: enabled ? 'pointer' : 'default',
+  fontFamily: FONT,
+  fontSize: 18,
+  fontWeight: 500,
+  color: '#1a1917',
+  background: 'linear-gradient(180deg,#fbf8f1,#ece7db)',
+  boxShadow: '0 12px 30px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.7)',
+  opacity: enabled ? 1 : 0.82,
+  transition: 'opacity .15s ease',
+});
 
 interface Question {
   id: string;
@@ -250,30 +265,27 @@ export default function AssessmentPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#222] overflow-hidden relative" style={{ minHeight: 1024 }}>
-      {/* Small egg — top 38, left 47 */}
-      <div style={{ position: 'absolute', top: 38, left: 47 }}>
-        <SlantEgg size="sm" />
-      </div>
+    <div
+      className="flex min-h-screen justify-center px-11 py-16"
+      style={{ background: '#1a1918', fontFamily: FONT }}
+    >
+      <div className="flex w-full max-w-[940px] flex-col gap-[30px]">
+        <SlantEgg size="sm" className="self-start" />
 
-      <h1
-        style={{
-          position: 'absolute',
-          top: 185,
-          left: 313,
-          width: 740,
-          fontFamily: FONT,
-          fontSize: 32,
-          fontWeight: 450,
-          lineHeight: '100%',
-          color: 'white',
-          margin: 0,
-        }}
-      >
-        Answer 20 questions about AI literacy to complete your assessment.
-      </h1>
+        <h1
+          style={{
+            fontFamily: FONT,
+            fontSize: 34,
+            fontWeight: 500,
+            letterSpacing: '-0.5px',
+            lineHeight: 1.25,
+            color: '#ece9e3',
+            margin: 0,
+          }}
+        >
+          Answer 20 questions about AI literacy to complete your assessment.
+        </h1>
 
-      <div style={{ position: 'absolute', top: 303, left: 303, width: 733 }}>
         <AssessmentQuestion
           questionNumber={currentIndex + 1}
           roleContext="AI Literacy"
@@ -281,45 +293,18 @@ export default function AssessmentPage() {
           answers={q.answers}
           selectedAnswerId={answers[q.id]}
           onAnswerSelect={handleSelect}
+          currentQuestion={currentIndex + 1}
+          totalQuestions={QUESTIONS.length}
         />
-      </div>
 
-      <div
-        style={{
-          position: 'absolute',
-          top: 846,
-          left: 303,
-          width: 733,
-          display: 'flex',
-          justifyContent: 'center',
-        }}
-      >
-        <AssessmentProgress currentQuestion={currentIndex + 1} totalQuestions={QUESTIONS.length} />
+        <button
+          disabled={!isAnswered}
+          onClick={handleContinue}
+          style={continueBtnStyle(isAnswered)}
+        >
+          {isLast ? 'Submit' : 'Continue'}
+        </button>
       </div>
-
-      <button
-        disabled={!isAnswered}
-        onClick={handleContinue}
-        style={{
-          position: 'absolute',
-          top: 913,
-          left: 966,
-          width: 166,
-          height: 38,
-          borderRadius: 20,
-          border: '1px solid #6b6b6b',
-          background: isAnswered ? '#fff' : 'transparent',
-          color: isAnswered ? '#222' : '#6b6b6b',
-          fontFamily: FONT,
-          fontSize: 18,
-          fontWeight: 300,
-          lineHeight: '100%',
-          cursor: isAnswered ? 'pointer' : 'default',
-          transition: 'all 0.15s',
-        }}
-      >
-        {isLast ? 'submit' : 'continue'}
-      </button>
     </div>
   );
 }

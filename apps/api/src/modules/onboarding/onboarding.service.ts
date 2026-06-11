@@ -2,9 +2,8 @@
  * OnboardingService.
  *
  * Application/domain layer:
- *   - Scores each submitted answer by looking up optionWeights on the question.
- *   - Weights stay here; the controller and repository never surface them to
- *     the API consumer.
+ *   - Scores each submitted answer by comparing against the correct answer.
+ *   - Simple correct-answer counting: 1 point per correct, total 20, passing = 18 (90%).
  *   - Supports a no-auth flow: if no userId is provided, a temporary user is
  *     created and the generated id is returned so the client can persist it.
  */
@@ -25,16 +24,15 @@ export class OnboardingService {
   async submit(body: SubmitOnboardingBody): Promise<OnboardingResult> {
     const userId = await this.repo.findOrCreateTempUser(body.userId);
 
-    const questions = await this.repo.findQuestionsWithWeights(body.role);
+    const questions = await this.repo.findQuestionsForScoring(body.role);
     if (questions.length === 0) {
       throw DomainError.notFound(`OnboardingQuestions for role "${body.role}"`);
     }
 
     const questionMap = new Map(questions.map((q) => [q.id, q]));
 
-    let totalScore = 0;
-    let maxPossibleScore = 0;
-    const answers: { questionId: string; selectedOption: string; selectedWeight: number }[] = [];
+    let correctCount = 0;
+    const answers: { questionId: string; selectedOption: string }[] = [];
 
     for (const ans of body.answers) {
       const question = questionMap.get(ans.questionId);
@@ -53,18 +51,19 @@ export class OnboardingService {
         );
       }
 
-      const selectedWeight = question.optionWeights[idx] ?? 0;
-      totalScore += question.questionWeight * selectedWeight;
-      maxPossibleScore += question.questionWeight;
+      if (ans.selectedOption === question.correctAnswer) {
+        correctCount++;
+      }
       answers.push({
         questionId: ans.questionId,
         selectedOption: ans.selectedOption,
-        selectedWeight,
       });
     }
 
-    const normalizedScore = maxPossibleScore > 0 ? (totalScore / maxPossibleScore) * 100 : 0;
-    const profileKey = deriveProfile(normalizedScore);
+    const totalQuestions = answers.length;
+    const totalScore = correctCount;
+    const normalizedScore = totalQuestions > 0 ? (correctCount / totalQuestions) * 100 : 0;
+    const profileKey = deriveProfile(correctCount);
 
     await this.repo.saveSubmission({ userId, role: body.role, answers });
     await this.repo.upsertResult(userId, totalScore, normalizedScore, profileKey);
@@ -75,16 +74,13 @@ export class OnboardingService {
       console.error('Failed to mark onboarding complete:', err);
     }
 
-    return { userId, totalScore, normalizedScore, maxPossibleScore, profileKey };
+    return { userId, totalScore, normalizedScore, maxPossibleScore: totalQuestions, profileKey };
   }
 }
 
-function deriveProfile(score: number): string {
-  if (score < 30) {
-    return 'beginner';
-  }
-  if (score < 70) {
-    return 'intermediate';
-  }
-  return 'advanced';
+function deriveProfile(correctCount: number): string {
+  const threshold = 18;
+  if (correctCount >= threshold) return 'advanced';
+  if (correctCount >= 10) return 'intermediate';
+  return 'beginner';
 }

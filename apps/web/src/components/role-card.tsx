@@ -1,15 +1,29 @@
-import { forwardRef, InputHTMLAttributes, PropsWithoutRef } from 'react';
+import { CSSProperties, forwardRef, InputHTMLAttributes, PropsWithoutRef } from 'react';
 import { cn } from '@/lib/cn';
 
 export interface RoleCardProps extends PropsWithoutRef<InputHTMLAttributes<HTMLInputElement>> {
   title: string;
   description: string;
-  /** sm: 6-up grid card (399×118, 29.24px radius, 23.92px title, 13.67px desc)
-   *  md: full-width hybrid card (467×138, 34.23px radius, 28px title, 16px desc) */
+  /** sm: card inside the 2-up grid · md: full-width hybrid card. */
   cardSize?: 'sm' | 'md';
 }
 
-const FONT = "'Suisse Int\\'l', system-ui, sans-serif";
+const FONT = "'Geist', system-ui, sans-serif";
+
+/** Pink-when-selected radio dot with a soft halo. */
+const radioStyle = (checked?: boolean): CSSProperties => ({
+  marginTop: 5,
+  width: 18,
+  height: 18,
+  borderRadius: '50%',
+  flexShrink: 0,
+  boxSizing: 'border-box',
+  border: checked ? 'none' : '1.5px solid rgba(255,255,255,0.35)',
+  background: checked ? '#f3a9c0' : 'transparent',
+  boxShadow: checked ? '0 0 0 4px rgba(243,169,192,0.2)' : 'none',
+  display: 'block',
+  transition: 'all .15s ease',
+});
 
 export const RoleCard = forwardRef<HTMLInputElement, RoleCardProps>(
   ({ title, description, cardSize = 'sm', className, ...props }, ref) => {
@@ -18,58 +32,47 @@ export const RoleCard = forwardRef<HTMLInputElement, RoleCardProps>(
     const isMd = cardSize === 'md';
 
     return (
-      <label htmlFor={id} className="relative block cursor-pointer w-full">
+      <label htmlFor={id} className="relative block w-full cursor-pointer">
         <div
-          className={cn(
-            'relative transition-colors',
-            checked ? 'bg-white/[0.04]' : 'bg-transparent',
-            className,
-          )}
+          className={cn('relative flex items-start gap-4 transition-all', className)}
           style={{
-            borderRadius: isMd ? 34.23 : 29.24,
-            border: `${isMd ? '0.9' : '0.7'}px solid #6b6b6b`,
-            padding: isMd ? '21px 56px' : '18px 48px',
+            borderRadius: 22,
+            padding: isMd ? '22px 26px' : '22px 24px',
+            background: checked ? 'rgba(255,255,255,0.085)' : 'rgba(255,255,255,0.04)',
+            border: checked ? '1px solid rgba(243,169,192,0.55)' : '1px solid transparent',
+            color: '#e9e7e3',
           }}
         >
-          {/* Radio dot */}
-          <span
-            style={{
-              position: 'absolute',
-              left: isMd ? 24 : 20.5,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              width: isMd ? 16 : 13.7,
-              height: isMd ? 16 : 13.7,
-              borderRadius: '50%',
-              border: `${isMd ? '1.5' : '1.3'}px solid #626262`,
-              background: checked ? '#dfdfdf' : 'transparent',
-              display: 'block',
-            }}
-          />
+          <span style={radioStyle(checked)} />
           <input ref={ref} id={id} type="radio" className="sr-only" {...props} />
-          <p
-            className="text-white"
-            style={{
-              fontFamily: FONT,
-              fontSize: isMd ? 28 : 23.92,
-              fontWeight: 300,
-              lineHeight: '150%',
-              marginBottom: 0,
-            }}
-          >
-            {title}
-          </p>
-          <p
-            className="text-white/70"
-            style={{
-              fontFamily: FONT,
-              fontSize: isMd ? 16 : 13.67,
-              fontWeight: 100,
-              lineHeight: '100%',
-            }}
-          >
-            {description}
-          </p>
+
+          <div>
+            <p
+              style={{
+                fontFamily: FONT,
+                fontSize: 22,
+                fontWeight: 500,
+                lineHeight: 1.2,
+                margin: 0,
+                color: '#eceae5',
+              }}
+            >
+              {title}
+            </p>
+            <p
+              style={{
+                fontFamily: FONT,
+                fontSize: 14,
+                fontWeight: 400,
+                lineHeight: 1.45,
+                marginTop: 9,
+                marginBottom: 0,
+                color: 'rgba(255,255,255,0.42)',
+              }}
+            >
+              {description}
+            </p>
+          </div>
         </div>
       </label>
     );

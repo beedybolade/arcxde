@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { SlantEgg } from '@/components/slant-egg';
 
-const FONT = "'Suisse Int\\'l', system-ui, sans-serif";
+const FONT = "'Geist', system-ui, sans-serif";
 
 const MEMBERSHIPS = [
   {

@@ -1,4 +1,4 @@
-import { forwardRef, InputHTMLAttributes, PropsWithoutRef } from 'react';
+import { CSSProperties, forwardRef, InputHTMLAttributes, PropsWithoutRef } from 'react';
 import { cn } from '@/lib/cn';
 
 export interface MembershipCardProps extends PropsWithoutRef<
@@ -8,7 +8,22 @@ export interface MembershipCardProps extends PropsWithoutRef<
   description: string;
 }
 
-const FONT = "'Suisse Int\\'l', system-ui, sans-serif";
+const FONT = "'Geist', system-ui, sans-serif";
+
+/** Pink-when-selected radio dot with a soft halo. */
+const radioStyle = (checked?: boolean): CSSProperties => ({
+  marginTop: 5,
+  width: 18,
+  height: 18,
+  borderRadius: '50%',
+  flexShrink: 0,
+  boxSizing: 'border-box',
+  border: checked ? 'none' : '1.5px solid rgba(255,255,255,0.35)',
+  background: checked ? '#f3a9c0' : 'transparent',
+  boxShadow: checked ? '0 0 0 4px rgba(243,169,192,0.2)' : 'none',
+  display: 'block',
+  transition: 'all .15s ease',
+});
 
 export const MembershipCard = forwardRef<HTMLInputElement, MembershipCardProps>(
   ({ title, description, className, ...props }, ref) => {
@@ -18,55 +33,45 @@ export const MembershipCard = forwardRef<HTMLInputElement, MembershipCardProps>(
     return (
       <label htmlFor={id} className="relative block cursor-pointer">
         <div
-          className={cn(
-            'relative transition-colors',
-            checked ? 'bg-white/[0.04]' : 'bg-transparent',
-            className,
-          )}
+          className={cn('relative flex items-start gap-[18px] transition-all', className)}
           style={{
-            borderRadius: 34.23,
-            border: '0.9px solid #6b6b6b',
-            padding: '21px 56px',
+            borderRadius: 24,
+            padding: '24px 28px',
+            background: checked ? '#f4f0e7' : 'rgba(255,255,255,0.045)',
+            color: checked ? '#1a1917' : '#e9e7e3',
+            boxShadow: checked ? '0 16px 46px rgba(0,0,0,0.42)' : 'none',
           }}
         >
-          {/* Custom radio dot */}
-          <span
-            style={{
-              position: 'absolute',
-              left: 24,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              width: 16,
-              height: 16,
-              borderRadius: '50%',
-              border: '1.5px solid #626262',
-              background: checked ? '#dfdfdf' : 'transparent',
-              display: 'block',
-              flexShrink: 0,
-            }}
-          />
+          <span style={radioStyle(checked)} />
           <input ref={ref} id={id} type="radio" className="sr-only" {...props} />
 
-          {/* Title: 28px / 300 / 150% */}
-          <p
-            className="text-white"
-            style={{
-              fontFamily: FONT,
-              fontSize: 28,
-              fontWeight: 300,
-              lineHeight: '150%',
-              marginBottom: 0,
-            }}
-          >
-            {title}
-          </p>
-          {/* Description: 16px / 100 / 100% */}
-          <p
-            className="text-white"
-            style={{ fontFamily: FONT, fontSize: 16, fontWeight: 100, lineHeight: '100%' }}
-          >
-            {description}
-          </p>
+          <div>
+            <p
+              style={{
+                fontFamily: FONT,
+                fontSize: 22,
+                fontWeight: 500,
+                lineHeight: 1.2,
+                margin: 0,
+              }}
+            >
+              {title}
+            </p>
+            <p
+              style={{
+                fontFamily: FONT,
+                fontSize: 14.5,
+                fontWeight: 400,
+                lineHeight: 1.45,
+                marginTop: 9,
+                marginBottom: 0,
+                maxWidth: 540,
+                color: checked ? 'rgba(26,25,23,0.62)' : 'rgba(255,255,255,0.46)',
+              }}
+            >
+              {description}
+            </p>
+          </div>
         </div>
       </label>
     );

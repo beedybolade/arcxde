@@ -1,7 +1,7 @@
 import { forwardRef, HTMLAttributes } from 'react';
 import { cn } from '@/lib/cn';
 
-const FONT = "'Suisse Int\\'l', system-ui, sans-serif";
+const FONT = "'Geist', system-ui, sans-serif";
 
 export interface HeroSectionProps extends HTMLAttributes<HTMLDivElement> {
   title: string;

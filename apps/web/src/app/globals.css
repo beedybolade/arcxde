@@ -1,3 +1,5 @@
+@import 'tailwindcss';
+/* @import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap'); */
 /* =============================================================================
  * arcxde — design system
  *
@@ -6,8 +8,6 @@
  *
  * Tailwind v4 — config lives in CSS via @theme. No tailwind.config.ts needed.
  * ========================================================================== */
-
-@import 'tailwindcss';
 
 /* ---------- Design tokens (light) ---------- */
 :root {
@@ -85,11 +85,7 @@
   --ring: 18 72% 56%;
 }
 
-/* ---------- Tailwind v4 theme bridge ----------
-   These @theme blocks expose CSS vars as Tailwind utilities. So
-   `bg-background` works, `text-foreground` works, `border-border` works,
-   `rounded-lg` uses --radius, etc.
-   -------------------------------------------- */
+/* ---------- Tailwind v4 theme bridge ---------- */
 @theme inline {
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
@@ -127,9 +123,8 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 
-  /* Typography — Suisse Int'l is the primary font for the design system */
-  --font-sans: "Suisse Int'l", system-ui, -apple-system, sans-serif;
-  --font-serif: "Suisse Int'l", Georgia, 'Times New Roman', serif;
+  --font-sans: 'Geist', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Geist', Georgia, 'Times New Roman', serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
 }
 
@@ -150,17 +145,14 @@
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
     font-family: var(--font-sans);
-    font-feature-settings: 'cv11', 'ss01', 'ss03';
     font-synthesis: none;
   }
 
-  /* Editorial-feel selection — warm and intentional */
   ::selection {
     background-color: hsl(var(--primary) / 0.18);
     color: hsl(var(--primary));
   }
 
-  /* Visible focus, NOT a generic blue glow */
   :focus-visible {
     outline: 2px solid hsl(var(--ring));
     outline-offset: 2px;
@@ -170,8 +162,6 @@
 
 /* ---------- One-off utilities ---------- */
 @layer utilities {
-  /* Subtle paper-grain texture for editorial surfaces.
-     Pure CSS — no asset, no network. */
   .bg-grain {
     background-image:
       radial-gradient(hsl(var(--foreground) / 0.025) 1px, transparent 1px),
@@ -184,7 +174,6 @@
       8px 12px;
   }
 
-  /* Page-load reveal — staggered via animation-delay on children */
   .reveal {
     opacity: 0;
     transform: translateY(8px);

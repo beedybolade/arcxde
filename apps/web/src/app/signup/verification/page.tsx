@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { useVerifySignupToken } from '@/lib/hooks/useAuth';
 import { SlantEgg } from '@/components/slant-egg';
 
-const FONT = "'Suisse Int\\'l', system-ui, sans-serif";
+const FONT = "'Geist', system-ui, sans-serif";
 
 const VERIFICATION_COPY = {
   LOADING: {
@@ -91,8 +91,11 @@ function VerifyLandingContent() {
   const isButtonDisabled = !token || verifyTokenMutation.isPending || !verificationStatus;
 
   return (
-    <div className="min-h-screen bg-[#222] flex flex-col items-center justify-center px-4">
-      <div style={{ marginBottom: 48 }}>
+    <div
+      className="flex min-h-screen flex-col items-center justify-center px-6"
+      style={{ background: '#1a1918', fontFamily: FONT }}
+    >
+      <div style={{ marginBottom: 44 }}>
         <SlantEgg size="lg" showText />
       </div>
 
@@ -100,9 +103,10 @@ function VerifyLandingContent() {
         <h1
           style={{
             fontFamily: FONT,
-            fontSize: 32,
-            fontWeight: 450,
-            color: 'white',
+            fontSize: 34,
+            fontWeight: 500,
+            letterSpacing: '-0.5px',
+            color: '#ece9e3',
             marginBottom: 16,
           }}
         >
@@ -112,9 +116,9 @@ function VerifyLandingContent() {
           style={{
             fontFamily: FONT,
             fontSize: 16,
-            fontWeight: 300,
-            color: '#a3a3a3',
-            lineHeight: '150%',
+            fontWeight: 400,
+            color: 'rgba(255,255,255,0.55)',
+            lineHeight: 1.55,
             marginBottom: 32,
           }}
         >
@@ -125,17 +129,18 @@ function VerifyLandingContent() {
           disabled={isButtonDisabled}
           onClick={handleProceedRouting}
           style={{
-            width: 240,
-            height: 48,
-            borderRadius: 24,
+            minWidth: 260,
+            padding: '18px 32px',
+            borderRadius: 16,
             border: 'none',
-            background: '#fff',
-            color: '#222',
+            background: 'linear-gradient(180deg,#fbf8f1,#ece7db)',
+            color: '#1a1917',
             fontFamily: FONT,
             fontSize: 16,
             fontWeight: 500,
             cursor: !isButtonDisabled ? 'pointer' : 'default',
             opacity: !isButtonDisabled ? 1 : 0.5,
+            boxShadow: '0 12px 30px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.7)',
             transition: 'opacity 0.2s ease',
           }}
         >
@@ -143,7 +148,7 @@ function VerifyLandingContent() {
         </button>
 
         {verifyTokenMutation.isError && (
-          <p style={{ fontFamily: FONT, fontSize: 14, color: '#ff6b6b', marginTop: 24 }}>
+          <p style={{ fontFamily: FONT, fontSize: 14, color: '#ff8a8a', marginTop: 24 }}>
             {verifyTokenMutation.error?.message ||
               'This verification link is invalid or has expired.'}
           </p>
@@ -157,16 +162,11 @@ export default function VerifyLandingPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#222] flex items-center justify-center">
-          <p
-            style={{
-              fontFamily: "'Suisse Int\\'l', system-ui, sans-serif",
-              color: 'white',
-              fontSize: 18,
-            }}
-          >
-            Loading...
-          </p>
+        <div
+          className="flex min-h-screen items-center justify-center"
+          style={{ background: '#1a1918' }}
+        >
+          <p style={{ fontFamily: FONT, color: '#ece9e3', fontSize: 18 }}>Loading...</p>
         </div>
       }
     >

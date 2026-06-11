@@ -10,7 +10,7 @@ export interface DashboardCardProps extends HTMLAttributes<HTMLDivElement> {
   size?: 'default' | 'compact';
 }
 
-const FONT = "'Suisse Int\\'l', system-ui, sans-serif";
+const FONT = "'Geist', system-ui, sans-serif";
 
 /**
  *   signal cards  : 467.2 × 149px, radius 34.23, border 0.9px #6b6b6b

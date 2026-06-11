@@ -5,27 +5,74 @@ import Link from 'next/link';
 import { SlantEgg } from '@/components/slant-egg';
 import { useGoogleAuth, useSendVerificationEmail } from '@/lib/hooks/useAuth';
 
-const FONT = "'Suisse Int\\'l', system-ui, sans-serif";
+const FONT = "'Geist', system-ui, sans-serif";
+
+const continueBtnStyle = (enabled: boolean): React.CSSProperties => ({
+  width: '100%',
+  padding: '22px',
+  borderRadius: 18,
+  border: 'none',
+  cursor: enabled ? 'pointer' : 'default',
+  fontFamily: FONT,
+  fontSize: 18,
+  fontWeight: 500,
+  color: '#1a1917',
+  background: 'linear-gradient(180deg,#fbf8f1,#ece7db)',
+  boxShadow: '0 12px 30px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.7)',
+  opacity: enabled ? 1 : 0.82,
+  transition: 'opacity .15s ease',
+});
 
 const GoogleLogo = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg width="22" height="22" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
     <path
-      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-      fill="#4285F4"
-    />
-    <path
-      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-      fill="#34A853"
-    />
-    <path
-      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-      fill="#FBBC05"
-    />
-    <path
-      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
       fill="#EA4335"
+      d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
+    />
+    <path
+      fill="#4285F4"
+      d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"
+    />
+    <path
+      fill="#FBBC05"
+      d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
+    />
+    <path
+      fill="#34A853"
+      d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
     />
   </svg>
+);
+
+const BrandPanel = () => (
+  <div className="flex flex-col items-center text-center">
+    <SlantEgg size="lg" showText style={{ marginBottom: 34 }} />
+    <h2
+      style={{
+        fontFamily: FONT,
+        fontSize: 34,
+        fontWeight: 400,
+        color: '#d9d6d0',
+        margin: '0 0 24px',
+      }}
+    >
+      Lorem ipsum dolor sit amet
+    </h2>
+    <p
+      style={{
+        fontFamily: FONT,
+        fontSize: 16,
+        lineHeight: 1.55,
+        color: 'rgba(255,255,255,0.4)',
+        maxWidth: 520,
+        margin: 0,
+      }}
+    >
+      Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
+      commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum
+      dolore eu fugiat nulla pariatur.
+    </p>
+  </div>
 );
 
 export default function IndividualSignupPage() {
@@ -49,299 +96,276 @@ export default function IndividualSignupPage() {
 
   if (step === 'code') {
     return (
-      <div className="min-h-screen bg-[#222] overflow-hidden flex">
-        {/* ── LEFT: branding ─────────────────────────────── */}
-        <div className="relative flex flex-1 items-center justify-center">
-          <SlantEgg size="lg" showText />
+      <div
+        className="flex min-h-screen items-center justify-center px-11 py-16"
+        style={{ background: '#1a1918', fontFamily: FONT }}
+      >
+        <div className="grid w-full max-w-[1180px] grid-cols-1 items-center gap-20 lg:grid-cols-2">
+          <BrandPanel />
+
           <div
             style={{
-              position: 'absolute',
-              right: 0,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              width: 1,
-              height: '69%',
-              borderRight: '1px solid #6b6b6b',
-            }}
-          />
-        </div>
-
-        {/* ── RIGHT: verification message ────────────────────────────────── */}
-        <div className="flex flex-1 flex-col justify-center px-16 py-16">
-          <h1
-            style={{
-              fontFamily: FONT,
-              fontSize: 32,
-              fontWeight: 450,
-              lineHeight: '100%',
-              color: 'white',
-              marginBottom: 24,
+              border: '1px solid rgba(255,255,255,0.16)',
+              borderRadius: 34,
+              padding: '46px 42px',
             }}
           >
-            Check your email
-          </h1>
-
-          <p
-            style={{
-              fontFamily: FONT,
-              fontSize: 18,
-              fontWeight: 300,
-              lineHeight: '150%',
-              color: '#a3a3a3',
-              maxWidth: 602,
-              marginBottom: 48,
-            }}
-          >
-            We&apos;ve sent a verification link to{' '}
-            <strong style={{ color: 'white' }}>{email}</strong>. Click the link in the email to
-            verify your account and continue.
-          </p>
-
-          <p
-            style={{
-              fontFamily: FONT,
-              fontSize: 14,
-              fontWeight: 300,
-              lineHeight: '150%',
-              color: '#6b6b6b',
-              maxWidth: 602,
-            }}
-          >
-            Didn&apos;t receive the email? Check your spam folder or{' '}
-            <button
-              onClick={() => setStep('email')}
+            <h1
               style={{
-                background: 'none',
-                border: 'none',
-                color: '#a3a3a3',
-                textDecoration: 'underline',
-                cursor: 'pointer',
                 fontFamily: FONT,
-                fontSize: 14,
+                fontSize: 34,
+                fontWeight: 500,
+                letterSpacing: '-0.5px',
+                color: '#ece9e3',
+                textAlign: 'center',
+                margin: 0,
               }}
             >
-              try again
-            </button>
-            .
-          </p>
+              Check your email
+            </h1>
+            <p
+              style={{
+                fontFamily: FONT,
+                fontSize: 16,
+                fontWeight: 400,
+                lineHeight: 1.55,
+                color: 'rgba(255,255,255,0.55)',
+                textAlign: 'center',
+                margin: '20px auto 0',
+                maxWidth: 460,
+              }}
+            >
+              We&apos;ve sent a verification link to{' '}
+              <strong style={{ color: '#ece9e3' }}>{email}</strong>. Click the link in the email to
+              verify your account and continue.
+            </p>
+            <p
+              style={{
+                fontFamily: FONT,
+                fontSize: 14,
+                fontWeight: 400,
+                lineHeight: 1.55,
+                color: 'rgba(255,255,255,0.4)',
+                textAlign: 'center',
+                margin: '28px auto 0',
+                maxWidth: 460,
+              }}
+            >
+              Didn&apos;t receive the email? Check your spam folder or{' '}
+              <button
+                onClick={() => setStep('email')}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#f3a9c0',
+                  textDecoration: 'underline',
+                  cursor: 'pointer',
+                  fontFamily: FONT,
+                  fontSize: 14,
+                }}
+              >
+                try again
+              </button>
+              .
+            </p>
+            <p
+              style={{
+                fontFamily: FONT,
+                fontSize: 14,
+                fontWeight: 400,
+                color: 'rgba(255,255,255,0.6)',
+                textAlign: 'center',
+                margin: '28px auto 0',
+              }}
+            >
+              Already have an account?{' '}
+              <Link
+                href="/login/individual"
+                style={{
+                  color: '#f3a9c0',
+                  textDecoration: 'none',
+                  fontWeight: 500,
+                }}
+              >
+                Sign in
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     );
   }
 
+  const canContinue = !!email && !sendVerificationEmailMutation.isPending;
+
   return (
-    <div className="min-h-screen bg-[#222] overflow-hidden flex">
-      {/* ── LEFT: branding ─────────────────────────────── */}
-      <div className="relative flex flex-1 items-center justify-center">
-        <SlantEgg size="lg" showText />
-        <div
-          style={{
-            position: 'absolute',
-            right: 0,
-            top: '50%',
-            transform: 'translateY(-50%)',
-            width: 1,
-            height: '69%',
-            borderRight: '1px solid #6b6b6b',
-          }}
-        />
-      </div>
+    <div
+      className="flex min-h-screen items-center justify-center px-11 py-16"
+      style={{ background: '#1a1918', fontFamily: FONT }}
+    >
+      <div className="grid w-full max-w-[1180px] grid-cols-1 items-center gap-20 lg:grid-cols-2">
+        <BrandPanel />
 
-      {/* ── RIGHT: form ────────────────────────────────── */}
-      <div className="flex flex-1 flex-col justify-center px-16 py-16">
-        {/* Back arrow — in flow, above heading */}
-
-        <Link
-          href="/signup"
-          style={{
-            fontFamily: FONT,
-            fontSize: 32,
-            fontWeight: 100,
-            lineHeight: '100%',
-            color: 'white',
-            textDecoration: 'none',
-            marginBottom: 24,
-            display: 'block',
-          }}
-        >
-          ←
-        </Link>
-
-        {/* Heading */}
-        <h1
-          style={{
-            fontFamily: FONT,
-            fontSize: 32,
-            fontWeight: 450,
-            lineHeight: '100%',
-            color: 'white',
-            marginBottom: 18,
-          }}
-        >
-          Create an individual account
-        </h1>
-
-        {/* Subtitle */}
-        <p
-          style={{
-            fontFamily: FONT,
-            fontSize: 24,
-            fontWeight: 100,
-            lineHeight: '100%',
-            color: 'white',
-            marginBottom: 48,
-          }}
-        >
-          Sign up with the Google account you use for work or with your work email address.
-        </p>
-
-        {/* Google button — height 54, padding top/bottom 15px, left/right 47.5px */}
-        <button
-          onClick={redirectToGoogle}
-          disabled={isRedirecting}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 15,
-            width: 345,
-            height: 54,
-            borderRadius: 10,
-            background: '#fff',
-            border: 'none',
-            paddingTop: 15,
-            paddingBottom: 15,
-            paddingLeft: 47.5,
-            paddingRight: 47.5,
-            boxShadow: '0px 0px 3px rgba(0,0,0,0.08), 0px 2px 3px rgba(0,0,0,0.17)',
-            cursor: 'pointer',
-            marginBottom: 48,
-            boxSizing: 'border-box',
-          }}
-        >
-          <GoogleLogo />
-          <span
-            style={{
-              fontFamily: 'Roboto, sans-serif',
-              fontSize: 20,
-              fontWeight: 500,
-              color: 'rgba(0,0,0,0.54)',
-            }}
-          >
-            {isRedirecting ? 'Connecting...' : 'Sign Up with Google'}
-          </span>
-        </button>
-
-        {/* — or — divider */}
-        <div style={{ display: 'flex', alignItems: 'center', width: 460, marginBottom: 48 }}>
-          <div style={{ flex: 1, borderTop: '1px solid #626262' }} />
-          <span
-            style={{
-              fontFamily: FONT,
-              fontSize: 18,
-              fontWeight: 300,
-              lineHeight: '100%',
-              color: 'white',
-              padding: '0 16px',
-            }}
-          >
-            or
-          </span>
-          <div style={{ flex: 1, borderTop: '1px solid #626262' }} />
-        </div>
-
-        {/* Email input wrapper */}
-        <div style={{ position: 'relative', width: 377, height: 71, marginBottom: 20 }}>
+        <div className="flex flex-col gap-7">
           <div
             style={{
-              position: 'absolute',
-              inset: 0,
-              borderRadius: 20,
-              border: '1px solid #6b6b6b',
+              border: '1px solid rgba(255,255,255,0.16)',
+              borderRadius: 34,
+              padding: '46px 42px',
+              display: 'flex',
+              flexDirection: 'column',
             }}
-          />
-          <input
-            type="email"
-            placeholder="work email address"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={sendVerificationEmailMutation.isPending}
-            style={{
-              position: 'absolute',
-              top: 27,
-              left: 27,
-              background: 'transparent',
-              border: 'none',
-              outline: 'none',
-              fontFamily: FONT,
-              fontSize: 18,
-              fontWeight: 300,
-              lineHeight: '100%',
-              color: '#fff', // Changed to white so text is visible when typing
-              width: 'calc(100% - 54px)',
-            }}
-          />
-        </div>
+          >
+            <h1
+              style={{
+                fontFamily: FONT,
+                fontSize: 34,
+                fontWeight: 500,
+                letterSpacing: '-0.5px',
+                color: '#ece9e3',
+                textAlign: 'center',
+                margin: 0,
+              }}
+            >
+              Create an individual account
+            </h1>
+            <p
+              style={{
+                fontFamily: FONT,
+                fontSize: 15,
+                fontWeight: 400,
+                lineHeight: 1.5,
+                color: 'rgba(255,255,255,0.5)',
+                textAlign: 'center',
+                margin: '20px auto 0',
+                maxWidth: 420,
+              }}
+            >
+              Sign up with the Google account you use for work or with your work email address.
+            </p>
 
-        {sendVerificationEmailMutation.isError && (
+            {/* Google button */}
+            <div style={{ display: 'flex', justifyContent: 'center', margin: '34px 0 28px' }}>
+              <button
+                onClick={redirectToGoogle}
+                disabled={isRedirecting}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 14,
+                  borderRadius: 12,
+                  background: '#fff',
+                  border: 'none',
+                  padding: '16px 30px',
+                  boxShadow: '0 3px 12px rgba(0,0,0,0.28)',
+                  cursor: isRedirecting ? 'default' : 'pointer',
+                }}
+              >
+                <GoogleLogo />
+                <span style={{ fontFamily: FONT, fontSize: 17, fontWeight: 500, color: '#1f1f1f' }}>
+                  {isRedirecting ? 'Connecting...' : 'Sign Up with Google'}
+                </span>
+              </button>
+            </div>
+
+            {/* OR divider */}
+            <div
+              style={{
+                textAlign: 'center',
+                fontFamily: FONT,
+                fontSize: 14,
+                letterSpacing: 1,
+                color: 'rgba(255,255,255,0.45)',
+                marginBottom: 22,
+              }}
+            >
+              OR
+            </div>
+            <div style={{ height: 1, background: 'rgba(255,255,255,0.12)', marginBottom: 30 }} />
+
+            {/* Email input */}
+            <input
+              type="email"
+              placeholder="Work email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={sendVerificationEmailMutation.isPending}
+              style={{
+                width: '100%',
+                padding: '20px 22px',
+                borderRadius: 14,
+                border: '1px solid rgba(255,255,255,0.18)',
+                background: 'transparent',
+                color: '#ece9e3',
+                fontFamily: FONT,
+                fontSize: 16,
+                outline: 'none',
+                boxSizing: 'border-box',
+              }}
+            />
+
+            {sendVerificationEmailMutation.isError && (
+              <p style={{ fontFamily: FONT, fontSize: 14, color: '#ff8a8a', margin: '16px 0 0' }}>
+                {sendVerificationEmailMutation.error?.message ||
+                  'Failed to send verification email. Please try again.'}
+              </p>
+            )}
+
+            {/* Legal */}
+            <p
+              style={{
+                fontFamily: FONT,
+                fontSize: 13.5,
+                fontWeight: 400,
+                color: 'rgba(255,255,255,0.45)',
+                textAlign: 'center',
+                margin: '30px 0 0',
+              }}
+            >
+              By continuing you agree to our{' '}
+              <a href="#" style={{ color: 'rgba(255,255,255,0.65)', textDecoration: 'underline' }}>
+                Terms &amp; Conditions
+              </a>
+              {' & '}
+              <a href="#" style={{ color: 'rgba(255,255,255,0.65)', textDecoration: 'underline' }}>
+                Privacy Policy
+              </a>
+            </p>
+          </div>
+
+          {/* Continue */}
+          <button
+            disabled={!canContinue}
+            onClick={handleSendEmail}
+            style={continueBtnStyle(canContinue)}
+          >
+            {sendVerificationEmailMutation.isPending ? 'Sending...' : 'Continue'}
+          </button>
+
+          {/* Sign in link */}
           <p
             style={{
               fontFamily: FONT,
               fontSize: 14,
-              fontWeight: 300,
-              lineHeight: '100%',
-              color: '#ff6b6b',
-              marginBottom: 32,
+              fontWeight: 400,
+              color: 'rgba(255,255,255,0.6)',
+              textAlign: 'center',
+              margin: 0,
             }}
           >
-            {sendVerificationEmailMutation.error?.message ||
-              'Failed to send verification email. Please try again.'}
+            Already have an account?{' '}
+            <Link
+              href="/login/individual"
+              style={{
+                color: '#f3a9c0',
+                textDecoration: 'none',
+                fontWeight: 500,
+              }}
+            >
+              Sign in
+            </Link>
           </p>
-        )}
-
-        {/* Continue button */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', width: 377, marginBottom: 48 }}>
-          <button
-            disabled={!email || sendVerificationEmailMutation.isPending}
-            onClick={handleSendEmail}
-            style={{
-              width: 166,
-              height: 38,
-              borderRadius: 20,
-              border: '1px solid #6b6b6b',
-              background: 'transparent',
-              color: email && !sendVerificationEmailMutation.isPending ? '#fff' : '#6b6b6b', // Text turns white when active
-              fontFamily: FONT,
-              fontSize: 18,
-              fontWeight: 300,
-              lineHeight: '100%',
-              cursor: email && !sendVerificationEmailMutation.isPending ? 'pointer' : 'default',
-              opacity: email && !sendVerificationEmailMutation.isPending ? 1 : 0.5,
-            }}
-          >
-            {sendVerificationEmailMutation.isPending ? 'sending...' : 'continue'}
-          </button>
         </div>
-
-        {/* Legal */}
-        <p
-          style={{
-            fontFamily: FONT,
-            fontSize: 14,
-            fontWeight: 300,
-            lineHeight: '100%',
-            color: '#a3a3a3',
-            maxWidth: 602,
-          }}
-        >
-          By continuing you agree to our{' '}
-          <a href="#" style={{ color: '#a3a3a3', textDecoration: 'underline' }}>
-            Terms &amp; Conditions
-          </a>
-          {' & '}
-          <a href="#" style={{ color: '#a3a3a3', textDecoration: 'underline' }}>
-            Privacy Policy
-          </a>
-        </p>
       </div>
     </div>
   );
