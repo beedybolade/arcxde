@@ -223,10 +223,9 @@ model OnboardingQuestion {
   text           String   @db.Text               // displayed question text
   description    String?  @db.Text               // optional helper text
   options        Json     // array of option labels, e.g., ["I rarely use AI", "I use AI occasionally", ...]
+  correctAnswer  String   @map("correct_answer") @db.VarChar(255) // correct answer option text
   order          Int      @default(0)
   isActive       Boolean  @default(true) @map("is_active")
-  questionWeight Float    @default(1.0) @map("question_weight") // overall multiplier for this question
-  optionWeights  Json     @default("[]") @map("option_weights") // per-option scores, same length as options
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
