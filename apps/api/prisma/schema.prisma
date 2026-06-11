@@ -223,7 +223,6 @@ model OnboardingQuestion {
   text           String   @db.Text               // displayed question text
   description    String?  @db.Text               // optional helper text
   options        Json     // array of option labels, e.g., ["I rarely use AI", "I use AI occasionally", ...]
-  correctAnswer  String   @map("correct_answer") @db.VarChar(255) // correct answer option text
   order          Int      @default(0)
   isActive       Boolean  @default(true) @map("is_active")
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)

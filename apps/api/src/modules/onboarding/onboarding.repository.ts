@@ -14,7 +14,6 @@ import { PrismaService } from '../prisma/prisma.service.js';
 export interface QuestionForScoring {
   id: string;
   options: string[];
-  correctAnswer: string;
 }
 
 export interface AnswerRecord {
@@ -58,19 +57,18 @@ export class OnboardingRepository {
     );
   }
 
-  /** Returns questions for scoring — includes correct answer for comparison. */
+  /** Returns questions for scoring. */
   async findQuestionsForScoring(role: string): Promise<QuestionForScoring[]> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     const rows = await this.prisma.onboardingQuestion.findMany({
       where: { role, isActive: true },
       orderBy: { order: 'asc' },
-      select: { id: true, options: true, correctAnswer: true },
+      select: { id: true, options: true },
     });
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    return rows.map((r: { id: string; options: unknown; correctAnswer: string }) => ({
+    return rows.map((r: { id: string; options: unknown }) => ({
       id: r.id,
       options: r.options as string[],
-      correctAnswer: r.correctAnswer,
     }));
   }
 

@@ -20,7 +20,6 @@ const displayQuestion = (overrides: Partial<OnboardingQuestion> = {}): Onboardin
 const scoringQuestion = (overrides: Partial<QuestionForScoring> = {}): QuestionForScoring => ({
   id: 'obq_550e8400e29b41d4a716446655440000',
   options: ['I rarely use AI', 'I use AI occasionally', 'I use AI regularly'],
-  correctAnswer: 'I use AI regularly',
   ...overrides,
 });
 
@@ -54,22 +53,19 @@ describe('OnboardingService', () => {
   });
 
   describe('submit', () => {
-    it('computes totalScore, normalizedScore and profileKey correctly', async () => {
+    it('marks onboarding as completed when all questions are answered', async () => {
       vi.mocked(repo.findOrCreateTempUser).mockResolvedValue(USER_ID);
-      // 20 questions to test scoring (threshold: 18+ = advanced, 10+ = intermediate, <10 = beginner)
-      const questions = Array.from({ length: 20 }, (_, i) => ({
+      const questions = Array.from({ length: 5 }, (_, i) => ({
         id: `obq_${i}`,
         options: ['I rarely use AI', 'I use AI occasionally', 'I use AI regularly'],
-        correctAnswer: 'I use AI regularly',
       }));
       vi.mocked(repo.findQuestionsForScoring).mockResolvedValue(questions);
       vi.mocked(repo.saveSubmission).mockResolvedValue(undefined);
       vi.mocked(repo.upsertResult).mockResolvedValue(undefined);
 
-      // 19 correct out of 20 answers (95%)
       const answers = questions.map((q) => ({
         questionId: q.id,
-        selectedOption: q.id === 'obq_0' ? 'I rarely use AI' : 'I use AI regularly',
+        selectedOption: 'I use AI occasionally',
       }));
 
       const result = await service.submit({
@@ -77,18 +73,17 @@ describe('OnboardingService', () => {
         answers,
       });
 
-      // 19 correct: totalScore = 19, maxPossible = 20, normalized = 95%, profileKey = advanced (19 >= 18)
       expect(result).toMatchObject<OnboardingResult>({
         userId: USER_ID,
-        totalScore: 19,
-        normalizedScore: 95,
-        maxPossibleScore: 20,
-        profileKey: 'advanced',
+        totalScore: 5,
+        normalizedScore: 100,
+        maxPossibleScore: 5,
+        profileKey: 'completed',
       });
       expect(repo.markOnboardingComplete).toHaveBeenCalledWith(USER_ID);
     });
 
-    it('assigns "beginner" profile for low scores', async () => {
+    it('completes onboarding with any valid answer', async () => {
       vi.mocked(repo.findOrCreateTempUser).mockResolvedValue(USER_ID);
       vi.mocked(repo.findQuestionsForScoring).mockResolvedValue([scoringQuestion()]);
       vi.mocked(repo.saveSubmission).mockResolvedValue(undefined);
@@ -101,8 +96,8 @@ describe('OnboardingService', () => {
         ],
       });
 
-      expect(result.profileKey).toBe('beginner');
-      expect(result.normalizedScore).toBe(0); // 0 correct answers out of 1
+      expect(result.profileKey).toBe('completed');
+      expect(result.normalizedScore).toBe(100); // All questions answered
     });
 
     it('throws NOT_FOUND when no questions exist for the role', async () => {

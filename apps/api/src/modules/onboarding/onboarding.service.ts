@@ -2,8 +2,8 @@
  * OnboardingService.
  *
  * Application/domain layer:
- *   - Scores each submitted answer by comparing against the correct answer.
- *   - Simple correct-answer counting: 1 point per correct, total 20, passing = 18 (90%).
+ *   - Collects user profiling answers (no correct/incorrect answers).
+ *   - Marks onboarding as completed when all questions are answered.
  *   - Supports a no-auth flow: if no userId is provided, a temporary user is
  *     created and the generated id is returned so the client can persist it.
  */
@@ -31,7 +31,6 @@ export class OnboardingService {
 
     const questionMap = new Map(questions.map((q) => [q.id, q]));
 
-    let correctCount = 0;
     const answers: { questionId: string; selectedOption: string }[] = [];
 
     for (const ans of body.answers) {
@@ -51,9 +50,6 @@ export class OnboardingService {
         );
       }
 
-      if (ans.selectedOption === question.correctAnswer) {
-        correctCount++;
-      }
       answers.push({
         questionId: ans.questionId,
         selectedOption: ans.selectedOption,
@@ -61,9 +57,9 @@ export class OnboardingService {
     }
 
     const totalQuestions = answers.length;
-    const totalScore = correctCount;
-    const normalizedScore = totalQuestions > 0 ? (correctCount / totalQuestions) * 100 : 0;
-    const profileKey = deriveProfile(correctCount);
+    const totalScore = totalQuestions;
+    const normalizedScore = totalQuestions > 0 ? 100 : 0;
+    const profileKey = 'completed';
 
     await this.repo.saveSubmission({ userId, role: body.role, answers });
     await this.repo.upsertResult(userId, totalScore, normalizedScore, profileKey);
@@ -76,15 +72,4 @@ export class OnboardingService {
 
     return { userId, totalScore, normalizedScore, maxPossibleScore: totalQuestions, profileKey };
   }
-}
-
-function deriveProfile(correctCount: number): string {
-  const threshold = 18;
-  if (correctCount >= threshold) {
-    return 'advanced';
-  }
-  if (correctCount >= 10) {
-    return 'intermediate';
-  }
-  return 'beginner';
 }
