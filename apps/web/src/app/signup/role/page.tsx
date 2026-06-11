@@ -35,26 +35,26 @@ const ROLES = [
     title: 'Strategist',
     description: 'Those shaping AI direction, opportunities and organisational priorities.',
   },
-  {
-    id: 'designer',
-    title: 'Designer',
-    description: 'Those designing AI-enabled experiences, interfaces and interactions.',
-  },
-  {
-    id: 'manager',
-    title: 'Manager',
-    description: 'Those leading teams, delivery and the operational use of AI.',
-  },
-  {
-    id: 'analyst',
-    title: 'Analyst',
-    description: 'Those using AI to interpret data, generate insight and support decision-making.',
-  },
-  {
-    id: 'executive',
-    title: 'Executive',
-    description: 'Senior leaders responsible for AI governance, oversight and business impact.',
-  },
+  // {
+  //   id: 'designer',
+  //   title: 'Designer',
+  //   description: 'Those designing AI-enabled experiences, interfaces and interactions.',
+  // },
+  // {
+  //   id: 'manager',
+  //   title: 'Manager',
+  //   description: 'Those leading teams, delivery and the operational use of AI.',
+  // },
+  // {
+  //   id: 'analyst',
+  //   title: 'Analyst',
+  //   description: 'Those using AI to interpret data, generate insight and support decision-making.',
+  // },
+  // {
+  //   id: 'executive',
+  //   title: 'Executive',
+  //   description: 'Senior leaders responsible for AI governance, oversight and business impact.',
+  // },
 ];
 
 const HYBRID = {
@@ -102,25 +102,24 @@ export default function RoleSelectionPage() {
       <Suspense fallback={null}>
         <AuthCallbackHandler />
       </Suspense>
-
       <div
-        className="flex min-h-screen justify-center px-11 py-16"
-        style={{ background: '#1a1918', fontFamily: FONT }}
+        className="flex flex-col px-4 pt-12 pb-24 justify-center items-center sm:px-11 sm:py-16"
+        style={{ background: '#272727', fontFamily: FONT, minHeight: '100dvh' }}
       >
-        <div className="flex w-full max-w-[940px] flex-col gap-[30px]">
-          <SlantEgg size="sm" className="self-start" />
+        <div className="w-full max-w-2xl mx-auto flex flex-col gap-6 sm:gap-8">
+          <SlantEgg size="sm" className="self-start" style={{ width: 'clamp(50px, 12vw, 62px)' }} />
 
           <div
             style={{
               border: '1px solid rgba(255,255,255,0.16)',
               borderRadius: 34,
-              padding: '48px 44px',
+              padding: 'clamp(28px, 6vw, 48px) clamp(24px, 6vw, 44px)',
             }}
           >
             <h1
               style={{
                 fontFamily: FONT,
-                fontSize: 34,
+                fontSize: 'clamp(24px, 5vw, 34px)',
                 fontWeight: 500,
                 letterSpacing: '-0.5px',
                 lineHeight: 1.25,
@@ -133,8 +132,8 @@ export default function RoleSelectionPage() {
 
             <div
               role="group"
-              className="grid grid-cols-1 gap-5 md:grid-cols-2"
-              style={{ marginTop: 38 }}
+              className="grid grid-cols-1 gap-3 sm:gap-5 md:grid-cols-2"
+              style={{ marginTop: 'clamp(24px, 5vw, 38px)' }}
             >
               {ROLES.map((role) => (
                 <RoleCard
@@ -163,13 +162,15 @@ export default function RoleSelectionPage() {
             </div>
           </div>
 
-          <button
-            disabled={!selected}
-            onClick={handleContinue}
-            style={continueBtnStyle(!!selected)}
-          >
-            Continue
-          </button>
+          <div className="shrink-0">
+            <button
+              onClick={handleContinue}
+              disabled={!selected}
+              style={continueBtnStyle(!!selected)}
+            >
+              Continue
+            </button>
+          </div>
         </div>
       </div>
     </>
