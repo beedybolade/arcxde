@@ -96,7 +96,6 @@ model User {
   identities         Identity[]
   memberships        Membership[]
   teamMembers        TeamMember[]
-  oauthConnections   OAuthConnection[]
   sessions           Session[]
   savedCourses       SavedCourse[]
   savedMedia         SavedMedia[]
@@ -424,34 +423,6 @@ enum SsoProvider {
 
   @@map("sso_provider")
 }
-
-model OAuthConnection {
-  id           String        @id @default(dbgenerated("'oauth_' || gen_random_uuid()::text"))
-  userId       String        @map("user_id")
-  provider     OAuthProvider
-  providerId   String        @map("provider_id") @db.VarChar(255)
-  accessToken  String        @map("access_token") @db.Text
-  refreshToken String?       @map("refresh_token") @db.Text
-  expiresAt    DateTime?     @map("expires_at") @db.Timestamptz(6)
-  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt    DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerId])
-  @@index([userId])
-  @@map("oauth_connections")
-}
-
-enum OAuthProvider {
-  google
-  github
-  linkedin
-  microsoft
-
-  @@map("oauth_provider")
-}
-
 
 // -----------------------------------------------------------------------------
 // Course Catalog & Learning Content
