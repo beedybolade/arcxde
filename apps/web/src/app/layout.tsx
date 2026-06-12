@@ -30,10 +30,24 @@ export const metadata: Metadata = {
   },
 };
 
+// export default function RootLayout({ children }: { children: React.ReactNode }) {
+//   return (
+//     <html lang="en" suppressHydrationWarning  className="h-full">
+// {/* <body className="min-h-[100dvh] overflow-y-auto"> */}
+//       <body className={`${fontVariables}  antialiased bg-background bg-grain text-foreground`}>
+//         <ReactQueryProvider>{children}</ReactQueryProvider>
+//       </body>
+//     </html>
+//   );
+// }
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${fontVariables} antialiased bg-background bg-grain text-foreground`}>
+      <body
+        className={`${fontVariables} antialiased bg-background bg-grain text-foreground`}
+        style={{ background: '#272727' }}
+      >
         <ReactQueryProvider>{children}</ReactQueryProvider>
       </body>
     </html>

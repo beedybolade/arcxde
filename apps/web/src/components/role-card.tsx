@@ -37,7 +37,7 @@ export const RoleCard = forwardRef<HTMLInputElement, RoleCardProps>(
           className={cn('relative flex items-start gap-4 transition-all', className)}
           style={{
             borderRadius: 22,
-            padding: isMd ? '22px 26px' : '22px 24px',
+            padding: isMd ? '24px 28px' : 'clamp(18px, 4vw, 22px) clamp(20px, 5vw, 24px)',
             background: checked ? 'rgba(255,255,255,0.085)' : 'rgba(255,255,255,0.04)',
             border: checked ? '1px solid rgba(243,169,192,0.55)' : '1px solid transparent',
             color: '#e9e7e3',
@@ -50,7 +50,7 @@ export const RoleCard = forwardRef<HTMLInputElement, RoleCardProps>(
             <p
               style={{
                 fontFamily: FONT,
-                fontSize: 22,
+                fontSize: 'clamp(18px, 4vw, 22px)',
                 fontWeight: 500,
                 lineHeight: 1.2,
                 margin: 0,
@@ -62,10 +62,10 @@ export const RoleCard = forwardRef<HTMLInputElement, RoleCardProps>(
             <p
               style={{
                 fontFamily: FONT,
-                fontSize: 14,
+                fontSize: 'clamp(13px, 2.5vw, 14px)',
                 fontWeight: 400,
                 lineHeight: 1.45,
-                marginTop: 9,
+                marginTop: 'clamp(6px, 1.5vw, 9px)',
                 marginBottom: 0,
                 color: 'rgba(255,255,255,0.42)',
               }}

@@ -35,26 +35,26 @@ const ROLES = [
     title: 'Strategist',
     description: 'Those shaping AI direction, opportunities and organisational priorities.',
   },
-  // {
-  //   id: 'designer',
-  //   title: 'Designer',
-  //   description: 'Those designing AI-enabled experiences, interfaces and interactions.',
-  // },
-  // {
-  //   id: 'manager',
-  //   title: 'Manager',
-  //   description: 'Those leading teams, delivery and the operational use of AI.',
-  // },
-  // {
-  //   id: 'analyst',
-  //   title: 'Analyst',
-  //   description: 'Those using AI to interpret data, generate insight and support decision-making.',
-  // },
-  // {
-  //   id: 'executive',
-  //   title: 'Executive',
-  //   description: 'Senior leaders responsible for AI governance, oversight and business impact.',
-  // },
+  {
+    id: 'designer',
+    title: 'Designer',
+    description: 'Those designing AI-enabled experiences, interfaces and interactions.',
+  },
+  {
+    id: 'manager',
+    title: 'Manager',
+    description: 'Those leading teams, delivery and the operational use of AI.',
+  },
+  {
+    id: 'analyst',
+    title: 'Analyst',
+    description: 'Those using AI to interpret data, generate insight and support decision-making.',
+  },
+  {
+    id: 'executive',
+    title: 'Executive',
+    description: 'Senior leaders responsible for AI governance, oversight and business impact.',
+  },
 ];
 
 const HYBRID = {

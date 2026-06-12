@@ -162,6 +162,10 @@
 
 /* ---------- One-off utilities ---------- */
 @layer utilities {
+
+  .min-h-screen {
+    min-height: 100dvh;
+  }
   .bg-grain {
     background-image:
       radial-gradient(hsl(var(--foreground) / 0.025) 1px, transparent 1px),
@@ -187,3 +191,5 @@
     }
   }
 }
+
+
