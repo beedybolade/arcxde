@@ -1,7 +1,8 @@
+/* eslint-disable no-console */
 import crypto from 'node:crypto';
+import type { ConnectorItem } from '@/connectors/base/types.js';
 import { RssConnector } from './connector.js';
 import { DEFAULT_GOOGLE_NEWS_QUERY, googleNewsFeedUrl, resolveRssFeedUrl } from './config.js';
-import type { ConnectorItem } from '@/connectors/base/types.js';
 
 // 🎨 ANSI Color Escape Constants
 const RESET = '\x1b[0m';
@@ -82,18 +83,16 @@ async function main() {
     );
 
     topRecords.forEach((item, index) => {
-      // Defensive compiler checks to guard against potential empty references
-      if (!item) return;
-
-      const title = (item.raw_payload as any)?.title || 'Untitled Article';
+      const rawTitle = (item.raw_payload as Record<string, unknown>).title;
+      const title = typeof rawTitle === 'string' ? rawTitle : 'Untitled Article';
 
       console.log(`${BOLD}${GREEN}[${index + 1}] Title:${RESET}        ${BOLD}${title}${RESET}`);
       console.log(`${GRAY}    Hash Key:    ${RESET}${YELLOW}${item.immutable_hash}${RESET}`);
       console.log(`${GRAY}    Published At: ${RESET}${CYAN}${item.published_at}${RESET}`);
       console.log(`${GRAY}    Source Link: ${RESET}${BLUE}${item.source_url ?? 'N/A'}${RESET}`);
-      console.log(`${GRAY}    Text Length: ${RESET}${item.content_text?.length ?? 0} characters`);
+      console.log(`${GRAY}    Text Length: ${RESET}${item.content_text.length} characters`);
       console.log(
-        `${GRAY}    Text Run:    ${RESET}${item.content_text?.substring(0, 120).replace(/\s+/g, ' ') ?? ''}${GRAY}...${RESET}`,
+        `${GRAY}    Text Run:    ${RESET}${item.content_text.substring(0, 120).replace(/\s+/g, ' ')}${GRAY}...${RESET}`,
       );
       console.log(
         `${GRAY}-------------------------------------------------------------------${RESET}`,

@@ -7,15 +7,15 @@ import type { RawRssItem } from './fetch.ts';
 export function normalizeRssItem(raw: RawRssItem, ctx: ConnectorContext): ConnectorItem {
   // 1. Establish stable fallbacks to guarantee strict identifier and date strings
   const externalId =
-    raw.guid ||
-    raw.link ||
+    raw.guid ??
+    raw.link ??
     `rss_fallback_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
 
   const cleanContent = trimContent(
-    raw.contentSnippet || raw.content || raw.title || 'No content available',
+    raw.contentSnippet ?? raw.content ?? raw.title ?? 'No content available',
   );
 
-  const publishedAt = raw.isoDate || new Date().toISOString();
+  const publishedAt = raw.isoDate ?? new Date().toISOString();
 
   // 2. Map properties to the expected base format template block
   const itemDraft: Omit<ConnectorItem, 'immutable_hash'> = {

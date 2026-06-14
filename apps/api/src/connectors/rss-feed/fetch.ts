@@ -45,7 +45,7 @@ export async function fetchRssPage(
 
   const fixturePath = resolveConnectorFixturePath(ctx.connectorConfig);
   if (fixturePath) {
-    const page = await fetchFixturePageFromPath(fixturePath);
+    const page = fetchFixturePageFromPath(fixturePath);
     return {
       items: page.items.map(fixtureItemToRawRssItem),
       next_cursor: undefined,
@@ -56,12 +56,9 @@ export async function fetchRssPage(
   const items: RawRssItem[] = [];
 
   for (const feedUrl of feedUrls) {
-    if (ctx.signal.aborted) {
-      throw new Error('Fetch aborted inside target iteration loop');
-    }
     ctx.logger(`fetching rss feed from: ${feedUrl}`);
     const feed = await parser.parseURL(feedUrl);
-    items.push(...((feed.items ?? []) as RawRssItem[]));
+    items.push(...(feed.items as RawRssItem[]));
   }
 
   return {

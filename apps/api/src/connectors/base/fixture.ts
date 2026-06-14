@@ -40,6 +40,6 @@ export function readFixtureItems(path: string): FixtureItem[] {
   return parsed as FixtureItem[];
 }
 
-export async function fetchFixturePageFromPath(path: string): Promise<FetchPage<FixtureItem>> {
+export function fetchFixturePageFromPath(path: string): FetchPage<FixtureItem> {
   return { items: readFixtureItems(path) };
 }

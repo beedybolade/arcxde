@@ -1,4 +1,5 @@
 import type { Connector, ConnectorContext, ConnectorResult } from '@/connectors/base/connector.ts';
+import type { FixtureItem } from '@/connectors/base/types.js';
 import { runConnectorLoop } from '@/connectors/base/run-loop.js';
 import {
   resolveConnectorFixturePath,
@@ -20,12 +21,13 @@ export class RssConnector implements Connector {
     const fixturePath = resolveConnectorFixturePath(ctx.connectorConfig);
 
     if (fixturePath) {
-      return runConnectorLoop<any>({
+      return runConnectorLoop<FixtureItem>({
         connectorName: this.name,
         ctx,
         // 🛠️ Fix 1: Accept the expected arguments to satisfy function type signature matching
-        fetchPage: (_ctx, _cursor) => fetchFixturePageFromPath(fixturePath),
-        normalize: (rawFixtureItem) => normalizeRssItem(rawFixtureItem, ctx),
+        fetchPage: (_ctx, _cursor) => Promise.resolve(fetchFixturePageFromPath(fixturePath)),
+        normalize: (rawFixtureItem) =>
+          normalizeRssItem(rawFixtureItem as unknown as RawRssItem, ctx),
         // 🛠️ Fix 2: Conditional property spread to maintain exactOptionalPropertyTypes rules
         ...(cursor !== undefined ? { cursor } : {}),
       });

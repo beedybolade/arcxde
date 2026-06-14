@@ -77,8 +77,11 @@ export async function runConnectorLoop<TRaw>(opts: {
     try {
       if (ctx.insertItem) {
         const outcome = await ctx.insertItem(item);
-        if (outcome === 'inserted') inserted++;
-        else skipped++;
+        if (outcome === 'inserted') {
+          inserted++;
+        } else {
+          skipped++;
+        }
       } else {
         inserted++;
       }
@@ -100,6 +103,7 @@ export async function runConnectorLoop<TRaw>(opts: {
 
 function externalIdFromRaw(raw: unknown): string | undefined {
   if (raw && typeof raw === 'object' && 'external_id' in raw) {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
     const id = (raw as { external_id: unknown }).external_id;
     return typeof id === 'string' ? id : undefined;
   }

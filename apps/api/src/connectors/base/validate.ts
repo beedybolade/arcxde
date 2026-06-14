@@ -19,7 +19,7 @@ export function parsePublishedAt(value: string): string {
 
 /** validate fields on a normalized item (call after normalize) */
 export function assertConnectorItem(item: ConnectorItem): void {
-  if (!item.external_id?.trim()) {
+  if (!item.external_id.trim()) {
     throw new ConnectorValidationError('external_id', 'required');
   }
   if (item.external_id.length > MAX_EXTERNAL_ID_LEN) {
@@ -36,15 +36,11 @@ export function assertConnectorItem(item: ConnectorItem): void {
 
   parsePublishedAt(item.published_at);
 
-  if (
-    item.raw_payload === null ||
-    typeof item.raw_payload !== 'object' ||
-    Array.isArray(item.raw_payload)
-  ) {
+  if (typeof item.raw_payload !== 'object' || Array.isArray(item.raw_payload)) {
     throw new ConnectorValidationError('raw_payload', 'must be a plain object');
   }
 
-  if (!item.immutable_hash || item.immutable_hash.length !== 64) {
+  if (item.immutable_hash?.length !== 64) {
     throw new ConnectorValidationError('immutable_hash', 'required 64-char hex digest');
   }
 }
