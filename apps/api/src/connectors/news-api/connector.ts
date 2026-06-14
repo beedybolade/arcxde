@@ -19,8 +19,7 @@ export class NewsApiConnector implements Connector {
       return runConnectorLoop<FixtureItem>({
         connectorName: this.name,
         ctx,
-        // Add 'async' here so the function returns a Promise<FetchPage<FixtureItem>>
-        fetchPage: async (_ctx, _cursor) => fetchFixturePageFromPath(fixturePath),
+        fetchPage: (_ctx, _cursor) => Promise.resolve(fetchFixturePageFromPath(fixturePath)),
         normalize: (rawFixture) =>
           normalizeNewsArticle(rawFixture as unknown as RawNewsArticle, ctx),
         ...(cursor !== undefined ? { cursor } : {}),

@@ -6,9 +6,9 @@ import type { RawNewsArticle } from './types.ts';
 
 export function normalizeNewsArticle(raw: RawNewsArticle, ctx: ConnectorContext): ConnectorItem {
   // Generate a distinct internal signature identifier if none exists
-  const targetExternalId = raw.id || raw.url;
-  const combinedContextText = `${raw.title}\n\n${raw.description || ''}`;
-  const cleanContent = trimContent(combinedContextText || 'No text content extracted');
+  const targetExternalId = raw.id ?? raw.url;
+  const combinedContextText = `${raw.title}\n\n${raw.description ?? ''}`;
+  const cleanContent = trimContent(combinedContextText ?? 'No text content extracted');
 
   const itemDraft: Omit<ConnectorItem, 'immutable_hash'> = {
     external_id: targetExternalId,

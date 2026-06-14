@@ -86,7 +86,7 @@ async function main() {
     );
 
     topRecords.forEach((item, index) => {
-      const rawPayload = item.raw_payload as Record<string, unknown>;
+      const rawPayload = item.raw_payload;
       const title = typeof rawPayload.title === 'string' ? rawPayload.title : 'Untitled Article';
       const source =
         typeof rawPayload.sourceName === 'string' ? rawPayload.sourceName : 'Unknown Source';
