@@ -4,6 +4,7 @@ import {
   resolveConnectorFixturePath,
   fetchFixturePageFromPath,
 } from '@/connectors/base/fixture.js';
+import type { FixtureItem } from '@/connectors/base/types.js';
 import { fetchUnifiedNewsPage } from './fetch.js';
 import { normalizeNewsArticle } from './normalize.js';
 import type { RawNewsArticle } from './types.ts';
@@ -15,12 +16,13 @@ export class NewsApiConnector implements Connector {
     const fixturePath = resolveConnectorFixturePath(ctx.connectorConfig);
 
     if (fixturePath) {
-      return runConnectorLoop<any>({
+      return runConnectorLoop<FixtureItem>({
         connectorName: this.name,
         ctx,
-        // Add 'async' here so the function returns a Promise<FetchPage<any>>
+        // Add 'async' here so the function returns a Promise<FetchPage<FixtureItem>>
         fetchPage: async (_ctx, _cursor) => fetchFixturePageFromPath(fixturePath),
-        normalize: (rawFixture) => normalizeNewsArticle(rawFixture, ctx),
+        normalize: (rawFixture) =>
+          normalizeNewsArticle(rawFixture as unknown as RawNewsArticle, ctx),
         ...(cursor !== undefined ? { cursor } : {}),
       });
     }

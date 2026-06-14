@@ -52,9 +52,9 @@ async function main() {
     runId: crypto.randomUUID(),
     logger: (msg) => console.log(`${GRAY}[LOG]${RESET} ${msg}`),
     signal: AbortSignal.timeout(60_000), // 1-minute timeout gateway
-    insertItem: async (item) => {
+    insertItem: (item) => {
       capturedItems.push(item);
-      return 'inserted';
+      return Promise.resolve('inserted' as const);
     },
   });
 
@@ -83,7 +83,7 @@ async function main() {
     );
 
     topRecords.forEach((item, index) => {
-      const rawTitle = (item.raw_payload as Record<string, unknown>).title;
+      const rawTitle = item.raw_payload.title;
       const title = typeof rawTitle === 'string' ? rawTitle : 'Untitled Article';
 
       console.log(`${BOLD}${GREEN}[${index + 1}] Title:${RESET}        ${BOLD}${title}${RESET}`);

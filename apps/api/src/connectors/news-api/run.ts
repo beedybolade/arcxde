@@ -53,9 +53,9 @@ async function main() {
       ...(apiKey ? { apiKey } : {}),
     },
 
-    insertItem: async (item) => {
+    insertItem: (item) => {
       capturedItems.push(item);
-      return 'inserted';
+      return Promise.resolve('inserted' as const);
     },
   });
 
@@ -86,10 +86,10 @@ async function main() {
     );
 
     topRecords.forEach((item, index) => {
-      if (!item) return;
-
-      const title = (item.raw_payload as any)?.title || 'Untitled Article';
-      const source = (item.raw_payload as any)?.sourceName || 'Unknown Source';
+      const rawPayload = item.raw_payload as Record<string, unknown>;
+      const title = typeof rawPayload.title === 'string' ? rawPayload.title : 'Untitled Article';
+      const source =
+        typeof rawPayload.sourceName === 'string' ? rawPayload.sourceName : 'Unknown Source';
 
       console.log(
         `${BOLD}${GREEN}[${index + 1}] Title:${RESET}        ${BOLD}${title}${RESET} ${GRAY}(via ${source})${RESET}`,

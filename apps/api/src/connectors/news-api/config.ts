@@ -17,9 +17,12 @@ export interface NewsOptionsResolution {
 export function resolveNewsApiOptions(
   configOverride?: Record<string, unknown>,
 ): NewsOptionsResolution {
-  const provider = String(configOverride?.provider ?? DEFAULT_NEWS_PROVIDER);
-  const query = String(configOverride?.query ?? DEFAULT_NEWS_API_QUERY);
-  const apiKey = configOverride?.apiKey ? String(configOverride.apiKey) : undefined;
+  const rawProvider = configOverride?.provider;
+  const provider = typeof rawProvider === 'string' ? rawProvider : DEFAULT_NEWS_PROVIDER;
+  const rawQuery = configOverride?.query;
+  const query = typeof rawQuery === 'string' ? rawQuery : DEFAULT_NEWS_API_QUERY;
+  const rawApiKey = configOverride?.apiKey;
+  const apiKey = typeof rawApiKey === 'string' ? rawApiKey : undefined;
 
   return {
     provider,
