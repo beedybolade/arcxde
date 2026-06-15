@@ -13,53 +13,53 @@ interface AuthLayoutProps {
 
 export const AuthLayout = ({
   children,
-  brandText = 'Welcome',
-  brandDescription = 'Sign in to your account to access your learning platform.',
+  brandText = 'Lorem ipsum dolor sit amet',
+  brandDescription = 'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.',
 }: AuthLayoutProps) => {
   return (
-    // <div
-    //   className="flex min-h-screen items-stretch justify-center px-4 py-12 sm:px-11 sm:py-16 lg:items-center"
-    //   style={{ background: '#272727', fontFamily: FONT }}
-    // >
     <div
       className="flex min-h-screen items-start justify-center px-4 py-12 sm:px-11 sm:py-16 lg:items-center"
       style={{ background: '#272727', fontFamily: FONT }}
     >
       <div className="grid w-full max-w-[1180px] grid-cols-1 items-start gap-8 sm:gap-12 lg:items-center lg:gap-20 lg:grid-cols-2">
-        {/* Logo on mobile, Brand Panel on desktop */}
+        {/* Logo — mobile only */}
         <div className="lg:hidden mb-4">
           <SlantEgg size="sm" style={{ width: 'clamp(50px, 12vw, 62px)' }} />
         </div>
 
-        {/* Brand Panel - Desktop only */}
+        {/* Brand Panel — desktop only */}
         <div className="hidden lg:flex flex-col items-center text-center">
           <SlantEgg
             size="lg"
             style={{ marginBottom: 'clamp(20px, 5vw, 34px)', width: 'clamp(180px, 25vw, 228px)' }}
           />
-          <h2
-            style={{
-              fontFamily: FONT,
-              fontSize: 'clamp(24px, 5vw, 34px)',
-              fontWeight: 400,
-              color: '#d9d6d0',
-              margin: '0 0 24px',
-            }}
-          >
-            {brandText}
-          </h2>
-          <p
-            style={{
-              fontFamily: FONT,
-              fontSize: 'clamp(14px, 2vw, 16px)',
-              lineHeight: 1.55,
-              color: 'rgba(255,255,255,0.4)',
-              maxWidth: 520,
-              margin: 0,
-            }}
-          >
-            {brandDescription}
-          </p>
+          {brandText && (
+            <h2
+              style={{
+                fontFamily: FONT,
+                fontSize: 'clamp(24px, 5vw, 34px)',
+                fontWeight: 400,
+                color: '#d9d6d0',
+                margin: '0 0 24px',
+              }}
+            >
+              {brandText}
+            </h2>
+          )}
+          {brandDescription && (
+            <p
+              style={{
+                fontFamily: FONT,
+                fontSize: 'clamp(14px, 2vw, 16px)',
+                lineHeight: 1.55,
+                color: 'rgba(255,255,255,0.4)',
+                maxWidth: 520,
+                margin: 0,
+              }}
+            >
+              {brandDescription}
+            </p>
+          )}
         </div>
 
         {/* Form Content */}

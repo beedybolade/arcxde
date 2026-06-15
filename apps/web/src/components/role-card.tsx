@@ -10,15 +10,13 @@ export interface RoleCardProps extends PropsWithoutRef<InputHTMLAttributes<HTMLI
 
 const FONT = "'Geist', system-ui, sans-serif";
 
-/** Pink-when-selected radio dot with a soft halo. */
 const radioStyle = (checked?: boolean): CSSProperties => ({
-  marginTop: 5,
-  width: 18,
-  height: 18,
+  width: 20,
+  height: 20,
   borderRadius: '50%',
   flexShrink: 0,
   boxSizing: 'border-box',
-  border: checked ? 'none' : '1.5px solid rgba(255,255,255,0.35)',
+  border: checked ? 'none' : '1.5px solid rgba(255,255,255,0.3)',
   background: checked ? '#f3a9c0' : 'transparent',
   boxShadow: checked ? '0 0 0 4px rgba(243,169,192,0.2)' : 'none',
   display: 'block',
@@ -34,13 +32,14 @@ export const RoleCard = forwardRef<HTMLInputElement, RoleCardProps>(
     return (
       <label htmlFor={id} className="relative block w-full cursor-pointer">
         <div
-          className={cn('relative flex items-start gap-4 transition-all', className)}
+          className={cn('relative flex items-center gap-4 transition-all', className)}
           style={{
             borderRadius: 22,
             padding: isMd ? '24px 28px' : 'clamp(18px, 4vw, 22px) clamp(20px, 5vw, 24px)',
-            background: checked ? 'rgba(255,255,255,0.085)' : 'rgba(255,255,255,0.04)',
-            border: checked ? '1px solid rgba(243,169,192,0.55)' : '1px solid transparent',
-            color: '#e9e7e3',
+            background: checked ? '#f0ece3' : 'rgba(255,255,255,0.07)',
+            border: checked
+              ? '1px solid rgba(243,169,192,0.55)'
+              : '1px solid rgba(255,255,255,0.08)',
           }}
         >
           <span style={radioStyle(checked)} />
@@ -50,11 +49,11 @@ export const RoleCard = forwardRef<HTMLInputElement, RoleCardProps>(
             <p
               style={{
                 fontFamily: FONT,
-                fontSize: 'clamp(18px, 4vw, 22px)',
+                fontSize: 'clamp(16px, 3vw, 19px)',
                 fontWeight: 500,
                 lineHeight: 1.2,
                 margin: 0,
-                color: '#eceae5',
+                color: checked ? '#1a1917' : '#eceae5',
               }}
             >
               {title}
@@ -65,9 +64,9 @@ export const RoleCard = forwardRef<HTMLInputElement, RoleCardProps>(
                 fontSize: 'clamp(13px, 2.5vw, 14px)',
                 fontWeight: 400,
                 lineHeight: 1.45,
-                marginTop: 'clamp(6px, 1.5vw, 9px)',
+                marginTop: 'clamp(5px, 1.5vw, 7px)',
                 marginBottom: 0,
-                color: 'rgba(255,255,255,0.42)',
+                color: checked ? 'rgba(26,25,23,0.55)' : 'rgba(255,255,255,0.42)',
               }}
             >
               {description}

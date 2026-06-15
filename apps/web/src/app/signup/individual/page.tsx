@@ -45,10 +45,7 @@ export default function IndividualSignupPage() {
 
   if (step === 'code') {
     return (
-      <AuthLayout
-        brandText="Check your email"
-        brandDescription={`We've sent a verification link to ${email}. Click the link in the email to verify your account and continue.`}
-      >
+      <AuthLayout>
         <div
           style={{
             border: '1px solid rgba(255,255,255,0.16)',
@@ -58,6 +55,32 @@ export default function IndividualSignupPage() {
             flexDirection: 'column',
           }}
         >
+          <h2
+            style={{
+              fontFamily: FONT,
+              fontSize: 'clamp(20px, 4vw, 26px)',
+              fontWeight: 400,
+              color: '#d9d6d0',
+              margin: '0 0 12px',
+              textAlign: 'center',
+            }}
+          >
+            Check your email
+          </h2>
+          <p
+            style={{
+              fontFamily: FONT,
+              fontSize: 14,
+              lineHeight: 1.55,
+              color: 'rgba(255,255,255,0.4)',
+              textAlign: 'center',
+              margin: '0 auto 20px',
+              maxWidth: 460,
+            }}
+          >
+            We&apos;ve sent a verification link to {email}. Click the link in the email to verify
+            your account and continue.
+          </p>
           <p
             style={{
               fontFamily: FONT,
@@ -66,7 +89,7 @@ export default function IndividualSignupPage() {
               lineHeight: 1.55,
               color: 'rgba(255,255,255,0.4)',
               textAlign: 'center',
-              margin: '20px auto 0',
+              margin: '0 auto',
               maxWidth: 460,
             }}
           >
@@ -100,11 +123,7 @@ export default function IndividualSignupPage() {
             Already have an account?{' '}
             <Link
               href="/login/individual"
-              style={{
-                color: '#f3a9c0',
-                textDecoration: 'none',
-                fontWeight: 500,
-              }}
+              style={{ color: '#f3a9c0', textDecoration: 'none', fontWeight: 500 }}
             >
               Sign in
             </Link>
@@ -117,10 +136,7 @@ export default function IndividualSignupPage() {
   const canContinue = !!email && !sendVerificationEmailMutation.isPending;
 
   return (
-    <AuthLayout
-      brandText="Create an individual account"
-      brandDescription="Sign up with the Google account you use for work or with your work email address."
-    >
+    <AuthLayout>
       <div
         style={{
           border: '1px solid rgba(255,255,255,0.16)',
@@ -128,9 +144,36 @@ export default function IndividualSignupPage() {
           padding: 'clamp(32px, 5vw, 46px) clamp(24px, 5vw, 42px)',
           display: 'flex',
           flexDirection: 'column',
+          alignItems: 'stretch',
         }}
       >
-        <div style={{ display: 'flex', justifyContent: 'center', margin: '24px 0 20px' }}>
+        <h2
+          style={{
+            fontFamily: FONT,
+            fontSize: 'clamp(20px, 4vw, 26px)',
+            fontWeight: 400,
+            color: '#d9d6d0',
+            margin: '0 0 10px',
+            textAlign: 'center',
+          }}
+        >
+          Create an individual account
+        </h2>
+        <p
+          style={{
+            fontFamily: FONT,
+            fontSize: 14,
+            lineHeight: 1.55,
+            color: 'rgba(255,255,255,0.4)',
+            textAlign: 'center',
+            margin: '0 0 24px',
+          }}
+        >
+          Sign up with the Google account you use for work or with your work email address.
+        </p>
+
+        {/* Google button — centered, auto width */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 4 }}>
           <GoogleButton
             onClick={redirectToGoogle}
             disabled={isRedirecting}
@@ -139,19 +182,21 @@ export default function IndividualSignupPage() {
           />
         </div>
 
-        <div
-          style={{
-            textAlign: 'center',
-            fontFamily: FONT,
-            fontSize: 14,
-            letterSpacing: 1,
-            color: 'rgba(255,255,255,0.45)',
-            marginBottom: 20,
-          }}
-        >
-          OR
+        {/* OR inline divider */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '20px 0' }}>
+          <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.12)' }} />
+          <span
+            style={{
+              fontFamily: FONT,
+              fontSize: 14,
+              letterSpacing: 1,
+              color: 'rgba(255,255,255,0.45)',
+            }}
+          >
+            OR
+          </span>
+          <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.12)' }} />
         </div>
-        <div style={{ height: 1, background: 'rgba(255,255,255,0.12)', marginBottom: 24 }} />
 
         <FormInput
           label="Work email"
@@ -177,7 +222,7 @@ export default function IndividualSignupPage() {
             fontWeight: 400,
             color: 'rgba(255,255,255,0.45)',
             textAlign: 'center',
-            margin: '24px 0 0',
+            margin: '16px 0 0',
           }}
         >
           By continuing you agree to our{' '}
@@ -212,11 +257,7 @@ export default function IndividualSignupPage() {
         Already have an account?{' '}
         <Link
           href="/login/individual"
-          style={{
-            color: '#f3a9c0',
-            textDecoration: 'none',
-            fontWeight: 500,
-          }}
+          style={{ color: '#f3a9c0', textDecoration: 'none', fontWeight: 500 }}
         >
           Sign in
         </Link>

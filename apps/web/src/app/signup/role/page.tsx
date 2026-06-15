@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { SlantEgg } from '@/components/slant-egg';
+import { CenteredLayout } from '@/components/layouts/centered-layout';
 import { RoleCard } from '@/components/role-card';
 import { useUserStore } from '@/store/user-store';
 
@@ -102,77 +102,62 @@ export default function RoleSelectionPage() {
       <Suspense fallback={null}>
         <AuthCallbackHandler />
       </Suspense>
-      <div
-        className="flex flex-col px-4 pt-12 pb-24 justify-center items-center sm:px-11 sm:py-16"
-        style={{ background: '#272727', fontFamily: FONT, minHeight: '100dvh' }}
-      >
-        <div className="w-full max-w-2xl mx-auto flex flex-col gap-6 sm:gap-8">
-          <SlantEgg size="sm" className="self-start" style={{ width: 'clamp(50px, 12vw, 62px)' }} />
 
-          <div
+      <CenteredLayout>
+        {/* Card */}
+        <div
+          style={{
+            border: '1px solid rgba(255,255,255,0.16)',
+            borderRadius: 34,
+            padding: 'clamp(28px, 5vw, 48px) clamp(24px, 5vw, 44px)',
+          }}
+        >
+          <h1
             style={{
-              border: '1px solid rgba(255,255,255,0.16)',
-              borderRadius: 34,
-              padding: 'clamp(28px, 6vw, 48px) clamp(24px, 6vw, 44px)',
+              fontFamily: FONT,
+              fontSize: 'clamp(22px, 4vw, 32px)',
+              fontWeight: 400,
+              lineHeight: 1.25,
+              color: '#ece9e3',
+              margin: '0 0 clamp(20px, 4vw, 32px)',
             }}
           >
-            <h1
-              style={{
-                fontFamily: FONT,
-                fontSize: 'clamp(24px, 5vw, 34px)',
-                fontWeight: 500,
-                letterSpacing: '-0.5px',
-                lineHeight: 1.25,
-                color: '#ece9e3',
-                margin: 0,
-              }}
-            >
-              Select the role that best reflects how you work with AI.
-            </h1>
+            Select the role that best reflects how you work with AI.
+          </h1>
 
-            <div
-              role="group"
-              className="grid grid-cols-1 gap-3 sm:gap-5 md:grid-cols-2"
-              style={{ marginTop: 'clamp(24px, 5vw, 38px)' }}
-            >
-              {ROLES.map((role) => (
-                <RoleCard
-                  key={role.id}
-                  title={role.title}
-                  description={role.description}
-                  name="role"
-                  value={role.id}
-                  checked={selected === role.id}
-                  onChange={() => setSelected(role.id)}
-                  cardSize="sm"
-                />
-              ))}
-            </div>
-
-            <div style={{ marginTop: 20 }}>
+          <div role="group" className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2">
+            {ROLES.map((role) => (
               <RoleCard
-                title={HYBRID.title}
-                description={HYBRID.description}
+                key={role.id}
+                title={role.title}
+                description={role.description}
                 name="role"
-                value={HYBRID.id}
-                checked={selected === HYBRID.id}
-                onChange={() => setSelected(HYBRID.id)}
-                cardSize="md"
+                value={role.id}
+                checked={selected === role.id}
+                onChange={() => setSelected(role.id)}
+                cardSize="sm"
               />
-            </div>
+            ))}
           </div>
 
-          <div className="shrink-0">
-            <button
-              onClick={handleContinue}
-              disabled={!selected}
-              style={continueBtnStyle(!!selected)}
-            >
-              Continue
-            </button>
+          <div style={{ marginTop: 16 }}>
+            <RoleCard
+              title={HYBRID.title}
+              description={HYBRID.description}
+              name="role"
+              value={HYBRID.id}
+              checked={selected === HYBRID.id}
+              onChange={() => setSelected(HYBRID.id)}
+              cardSize="md"
+            />
           </div>
         </div>
-      </div>
+
+        {/* Continue button */}
+        <button onClick={handleContinue} disabled={!selected} style={continueBtnStyle(!!selected)}>
+          Continue
+        </button>
+      </CenteredLayout>
     </>
   );
 }

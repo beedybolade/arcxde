@@ -8,6 +8,7 @@ import { SlantEgg } from '@/components/slant-egg';
 import { AssessmentQuestion } from '@/components/assessment-question';
 import { useOnboardingQuestions, useSubmitOnboarding } from '@/lib/hooks/useOnboarding';
 import { useUserStore } from '@/store/user-store';
+import { CenteredLayout } from '@/components/layouts/centered-layout';
 
 const FONT = "'Geist', system-ui, sans-serif";
 
@@ -105,7 +106,11 @@ function OnboardingQuestionsContent() {
   };
 
   const handleContinue = () => {
-    if (isLast && userId && currentRole) {
+    if (isLast) {
+      if (!userId || !currentRole) {
+        router.push('/signup/role');
+        return;
+      }
       const formattedAnswers = Object.entries(answers).map(([questionId, answerIdx]) => {
         const question = questions.find((q) => q.id === questionId);
         const selectedOption = question?.options[parseInt(answerIdx)] || answerIdx;
@@ -140,7 +145,12 @@ function OnboardingQuestionsContent() {
     );
   }
 
-  if (questionsError || !currentRole || !userId) {
+  if (!currentRole) {
+    router.push('/signup/role');
+    return null;
+  }
+
+  if (questionsError) {
     return (
       <ScreenShell>
         <p style={{ color: '#ff8a8a', fontSize: 18 }}>
@@ -159,36 +169,16 @@ function OnboardingQuestionsContent() {
   }
 
   return (
-    <div
-      className="flex min-h-screen justify-center px-11 py-16"
-      style={{ background: '#1a1918', fontFamily: FONT }}
-    >
-      <div className="flex w-full max-w-[940px] flex-col gap-[30px]">
-        <SlantEgg size="sm" className="self-start" />
-
-        <div style={{ display: 'flex', gap: 26, alignItems: 'flex-start' }}>
-          <Link
-            href="/signup/role"
-            aria-label="Back"
-            style={{ marginTop: 8, color: '#ece9e3', display: 'flex', textDecoration: 'none' }}
-          >
-            <BackArrow />
-          </Link>
-          <h1
-            style={{
-              fontFamily: FONT,
-              fontSize: 34,
-              fontWeight: 500,
-              letterSpacing: '-0.5px',
-              lineHeight: 1.25,
-              color: '#ece9e3',
-              margin: 0,
-            }}
-          >
-            Answer just {questions.length} questions to help us personalise your Arcxde experience.
-          </h1>
-        </div>
-
+    <CenteredLayout>
+      <div
+        style={
+          {
+            // border: '1px solid rgba(255,255,255,0.16)',
+            // borderRadius: 34,
+            // padding: 'clamp(28px, 5vw, 48px) clamp(24px, 5vw, 44px)',
+          }
+        }
+      >
         {q && (
           <AssessmentQuestion
             questionNumber={currentIndex + 1}
@@ -201,22 +191,22 @@ function OnboardingQuestionsContent() {
             totalQuestions={questions.length}
           />
         )}
-
-        {submitError && (
-          <p style={{ fontFamily: FONT, fontSize: 14, color: '#ff8a8a', margin: 0 }}>
-            {submitError.message || 'Error submitting answers'}
-          </p>
-        )}
-
-        <button
-          disabled={!isAnswered || isSubmitting}
-          onClick={handleContinue}
-          style={continueBtnStyle(isAnswered && !isSubmitting)}
-        >
-          {isSubmitting ? 'Submitting...' : 'Continue'}
-        </button>
       </div>
-    </div>
+
+      {submitError && (
+        <p style={{ fontFamily: FONT, fontSize: 14, color: '#ff8a8a', margin: 0 }}>
+          {submitError.message || 'Error submitting answers'}
+        </p>
+      )}
+
+      <button
+        disabled={!isAnswered || isSubmitting}
+        onClick={handleContinue}
+        style={continueBtnStyle(isAnswered && !isSubmitting)}
+      >
+        {isSubmitting ? 'Submitting...' : 'Continue'}
+      </button>
+    </CenteredLayout>
   );
 }
 
