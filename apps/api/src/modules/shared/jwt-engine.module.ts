@@ -17,7 +17,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         return {
           secret,
           signOptions: {
-            expiresIn: (configService.get<string>('JWT_ACCESS_TTL') ?? '15m') as any,
+            expiresIn: (configService.get<string>('JWT_ACCESS_TTL') ?? '15m') as never,
           },
         };
       },

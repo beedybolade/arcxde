@@ -254,7 +254,11 @@ export class EmailVerificationService {
   /**
    * Inspects credentials maps to place the routing target into the app lifecycle
    */
-  private async determineUserStatus(user: any): Promise<UserLifecycleStatus> {
+  private async determineUserStatus(user: {
+    id: string;
+    onboardingCompleted: boolean;
+    registrationCompleted: boolean;
+  }): Promise<UserLifecycleStatus> {
     const hasEmailIdentity = await this.prisma.identity.findFirst({
       where: {
         userId: user.id,
