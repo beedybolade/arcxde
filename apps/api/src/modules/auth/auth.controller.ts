@@ -142,7 +142,7 @@ export class AuthController {
       if (accessToken) {
         // Decode the access token to capture the session ID (sid)
         // If you don't have jwtService injected, you can use standard jwt.decode(accessToken)
-        const decoded: { sid?: string } = this.jwtService.decode(accessToken) as { sid?: string };
+        const decoded: { sid?: string } = this.jwtService.decode(accessToken);
 
         if (decoded?.sid) {
           // Route it to a service function that handles the session table deletion
@@ -245,7 +245,7 @@ export class AuthController {
     }
 
     // Decode the token using your injected JwtService
-    const decoded: { sub: string } = this.jwtService.decode(accessToken) as { sub: string };
+    const decoded: { sub: string } = this.jwtService.decode(accessToken);
 
     // 'sub' contains your user ID string (e.g. usr_f22db73a...)
     return {
