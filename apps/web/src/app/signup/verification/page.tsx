@@ -3,6 +3,7 @@
 import { Suspense, useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useVerifySignupToken } from '@/lib/hooks/useAuth';
+import { useUserStore } from '@/store/user-store';
 import { SlantEgg } from '@/components/slant-egg';
 
 const FONT = "'Geist', system-ui, sans-serif";
@@ -51,8 +52,16 @@ function VerifyLandingContent() {
           email: string;
           registrationToken: string;
           status: 'NEW_USER' | 'PENDING_ONBOARDING' | 'PENDING_REGISTRATION' | 'EXISTING_USER';
+          accessToken?: string;
+          user?: { id: string; email: string };
         }) => {
-          // Commit parameters to component state instead of routing instantly!
+          // For EXISTING_USER (login via magic link), store the token immediately
+          // so the middleware guard on /dashboard can find it
+          if (response.status === 'EXISTING_USER' && response.accessToken && response.user) {
+            useUserStore.setState({ userId: response.user.id, token: response.accessToken });
+            const secure = process.env.NODE_ENV === 'production';
+            document.cookie = `access_token=${response.accessToken}; path=/; secure=${secure}; samesite=strict`;
+          }
           setVerificationStatus(response.status);
           setCachedRegToken(response.registrationToken);
         },

@@ -238,7 +238,7 @@ export class AuthRepository {
     });
   }
 
-  async deleteSession(sessionId: string): Promise<void> {
+  async deleteSessionBySessionId(sessionId: string): Promise<void> {
     await this.prisma.session.deleteMany({
       where: {
         id: sessionId,
