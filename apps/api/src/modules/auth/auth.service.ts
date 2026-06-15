@@ -161,12 +161,12 @@ export class AuthService {
 
     if (!session || session.expiresAt < new Date()) {
       if (session) {
-        await this.authRepository.deleteSession(session.id);
+        await this.authRepository.deleteSessionBySessionId(session.id);
       }
       throw new UnauthorizedException('Session has expired or is invalid.');
     }
 
-    await this.authRepository.deleteSession(session.id);
+    await this.authRepository.deleteSessionBySessionId(session.id);
 
     const newTokens = await this.generateSessionTokens(session.userId, session.id);
     const newHash = this.hashToken(newTokens.refreshToken);
@@ -220,8 +220,8 @@ export class AuthService {
   }
 
   // 5. Session Termination Logic for Logout and Token Revocation
-  async clearSession(sessionId: string): Promise<void> {
-    await this.authRepository.deleteSession(sessionId);
+  async clearSessionBySessionID(sessionId: string): Promise<void> {
+    await this.authRepository.deleteSessionBySessionId(sessionId);
   }
 
   async generatePasswordResetToken(email: string): Promise<string | null> {

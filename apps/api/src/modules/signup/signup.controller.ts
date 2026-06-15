@@ -42,13 +42,20 @@ export class SignupController {
   @ApiZodBody(verifyLinkSchema, "Verifies the verification link sent to the user's email address.")
   async verifyLink(@ZodBody(verifyLinkSchema) body: VerifyLinkDto) {
     const result = await this.verificationService.verifyMagicLink(body.token);
-    return {
+    const response: Record<string, unknown> = {
       success: true,
       message: 'Email address successfully verified.',
       email: result.email,
       registrationToken: result.registrationToken,
       status: result.status,
     };
+    if (result.accessToken) {
+      response.accessToken = result.accessToken;
+    }
+    if (result.user) {
+      response.user = result.user;
+    }
+    return response;
   }
   @Post('finalize-registration')
   @ApiZodBody(
@@ -73,6 +80,15 @@ export class SignupController {
       sameSite: 'strict', // Mitigates CSRF vectors
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 Days matching your session strategy
       path: '/api/v1/auth/refresh', // Restricted exclusively to token rotation routes
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    res.cookie('access_token', result.tokens.accessToken, {
+      httpOnly: false, // Set to false IF your client-side React code needs to read it directly, or true if only middleware/API needs it
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 15 * 60 * 1000, // 15 Minutes matching your access token TTL
+      path: '/', // Crucial: Must be root path so Next.js middleware can read it on any route
     });
 
     // 3. Return payload to client (accessToken stays cleanly in memory state on frontend)

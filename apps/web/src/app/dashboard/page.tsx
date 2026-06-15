@@ -1,7 +1,9 @@
 'use client';
 
+import { useEffect } from 'react';
 import { DashboardSidebar } from '@/components/dashboard-sidebar';
 import { DashboardCard, type ContentType } from '@/components/dashboard-card';
+import { useUserStore } from '@/store/user-store';
 
 const FONT = "'Geist', system-ui, sans-serif";
 
@@ -39,6 +41,25 @@ const COMMUNITY = [
  *   Section labels: 16px / 300 / uppercase
  */
 export default function DashboardPage() {
+  // Sync cookie token into Zustand store on mount (handles Google OAuth where
+  // the middleware sets the cookie but never touches the store)
+  useEffect(() => {
+    const store = useUserStore.getState();
+    if (store.userId && store.token) return; // already hydrated
+
+    const match = document.cookie.match(/access_token=([^;]+)/);
+    if (match?.[1]) {
+      try {
+        const payload = JSON.parse(atob(match[1].split('.')[1]));
+        if (payload.sub) {
+          useUserStore.setState({ userId: payload.sub, token: match[1] });
+        }
+      } catch {
+        // invalid token — ignore
+      }
+    }
+  }, []);
+
   return (
     <div
       className="bg-[#1a1918]"
