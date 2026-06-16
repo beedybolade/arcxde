@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { AuthLayout } from '@/components/auth-layout';
+import { AuthLayout } from '@/components/layouts/auth-layout';
 import { RoleCard } from '@/components/role-card';
 
 const FONT = "'Geist', system-ui, sans-serif";
@@ -108,6 +108,30 @@ export default function SignUpPage() {
             />
           ))}
         </div>
+
+        {/* After the membership cards div, before closing the card div */}
+        <p
+          style={{
+            fontFamily: FONT,
+            fontSize: 14,
+            color: 'rgba(255,255,255,0.4)',
+            textAlign: 'center',
+            marginTop: 'clamp(20px, 4vw, 28px)',
+            marginBottom: 0,
+          }}
+        >
+          Have an account?{' '}
+          <a
+            href="/login"
+            style={{
+              color: '#FFB7C9',
+              fontWeight: 500,
+              textDecoration: 'none',
+            }}
+          >
+            Sign In
+          </a>
+        </p>
       </div>
 
       {/* Continue button */}
