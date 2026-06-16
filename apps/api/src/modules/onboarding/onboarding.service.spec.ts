@@ -12,15 +12,14 @@ const displayQuestion = (overrides: Partial<OnboardingQuestion> = {}): Onboardin
   id: 'obq_550e8400e29b41d4a716446655440000',
   text: 'How do you use AI?',
   description: null,
-  options: ['A. Never', 'B. Sometimes', 'C. Always'],
+  options: ['I rarely use AI', 'I use AI occasionally', 'I use AI regularly'],
   order: 1,
   ...overrides,
 });
 
 const scoringQuestion = (overrides: Partial<QuestionForScoring> = {}): QuestionForScoring => ({
   id: 'obq_550e8400e29b41d4a716446655440000',
-  options: ['A. Never', 'B. Sometimes', 'C. Always'],
-  correctAnswer: 'C',
+  options: ['I rarely use AI', 'I use AI occasionally', 'I use AI regularly'],
   ...overrides,
 });
 
@@ -31,6 +30,7 @@ const makeRepo = (): OnboardingRepository =>
     findOrCreateTempUser: vi.fn(),
     saveSubmission: vi.fn(),
     upsertResult: vi.fn(),
+    markOnboardingComplete: vi.fn(),
   }) as unknown as OnboardingRepository;
 
 describe('OnboardingService', () => {
@@ -53,39 +53,37 @@ describe('OnboardingService', () => {
   });
 
   describe('submit', () => {
-    it('computes totalScore, normalizedScore and profileKey correctly', async () => {
+    it('marks onboarding as completed when all questions are answered', async () => {
       vi.mocked(repo.findOrCreateTempUser).mockResolvedValue(USER_ID);
-      // Mock 20 questions (all with C as correct)
-      const questions = Array.from({ length: 20 }, (_, i) =>
-        scoringQuestion({
-          id: `obq_${i}`,
-          correctAnswer: 'C',
-        }),
-      );
+      const questions = Array.from({ length: 5 }, (_, i) => ({
+        id: `obq_${i}`,
+        options: ['I rarely use AI', 'I use AI occasionally', 'I use AI regularly'],
+      }));
       vi.mocked(repo.findQuestionsForScoring).mockResolvedValue(questions);
       vi.mocked(repo.saveSubmission).mockResolvedValue(undefined);
       vi.mocked(repo.upsertResult).mockResolvedValue(undefined);
 
+      const answers = questions.map((q) => ({
+        questionId: q.id,
+        selectedOption: 'I use AI occasionally',
+      }));
+
       const result = await service.submit({
         role: ROLE,
-        answers: Array.from({ length: 20 }, (_, i) => ({
-          questionId: `obq_${i}`,
-          // First 18 correct (C), last 2 wrong (A and B)
-          selectedOption: i < 18 ? 'C. Always' : i === 18 ? 'A. Never' : 'B. Sometimes',
-        })),
+        answers,
       });
 
-      // 18 correct answers out of 20 = 90%
       expect(result).toMatchObject<OnboardingResult>({
         userId: USER_ID,
-        totalScore: 18,
-        normalizedScore: 90,
-        maxPossibleScore: 20,
-        profileKey: 'advanced',
+        totalScore: 5,
+        normalizedScore: 100,
+        maxPossibleScore: 5,
+        profileKey: 'completed',
       });
+      expect(repo.markOnboardingComplete).toHaveBeenCalledWith(USER_ID);
     });
 
-    it('assigns "beginner" profile for low scores', async () => {
+    it('completes onboarding with any valid answer', async () => {
       vi.mocked(repo.findOrCreateTempUser).mockResolvedValue(USER_ID);
       vi.mocked(repo.findQuestionsForScoring).mockResolvedValue([scoringQuestion()]);
       vi.mocked(repo.saveSubmission).mockResolvedValue(undefined);
@@ -94,12 +92,12 @@ describe('OnboardingService', () => {
       const result = await service.submit({
         role: ROLE,
         answers: [
-          { questionId: 'obq_550e8400e29b41d4a716446655440000', selectedOption: 'A. Never' },
+          { questionId: 'obq_550e8400e29b41d4a716446655440000', selectedOption: 'I rarely use AI' },
         ],
       });
 
-      expect(result.profileKey).toBe('beginner');
-      expect(result.normalizedScore).toBe(0);
+      expect(result.profileKey).toBe('completed');
+      expect(result.normalizedScore).toBe(100); // All questions answered
     });
 
     it('throws NOT_FOUND when no questions exist for the role', async () => {
@@ -109,7 +107,7 @@ describe('OnboardingService', () => {
       await expect(
         service.submit({
           role: 'unknown',
-          answers: [{ questionId: 'obq_x', selectedOption: 'A. Never' }],
+          answers: [{ questionId: 'obq_x', selectedOption: 'I rarely use AI' }],
         }),
       ).rejects.toMatchObject({ kind: 'NOT_FOUND' });
     });
@@ -122,7 +120,7 @@ describe('OnboardingService', () => {
         service.submit({
           role: ROLE,
           answers: [
-            { questionId: 'obq_wrong_id_12345678901234567890', selectedOption: 'A. Never' },
+            { questionId: 'obq_wrong_id_12345678901234567890', selectedOption: 'I rarely use AI' },
           ],
         }),
       ).rejects.toMatchObject({ code: 'INVALID_QUESTION', kind: 'BAD_REQUEST' });
@@ -154,7 +152,10 @@ describe('OnboardingService', () => {
       await service.submit({
         role: ROLE,
         answers: [
-          { questionId: 'obq_550e8400e29b41d4a716446655440000', selectedOption: 'B. Sometimes' },
+          {
+            questionId: 'obq_550e8400e29b41d4a716446655440000',
+            selectedOption: 'I use AI occasionally',
+          },
         ],
       });
 

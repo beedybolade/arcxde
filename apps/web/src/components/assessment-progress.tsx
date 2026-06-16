@@ -6,18 +6,19 @@ export interface AssessmentProgressProps extends HTMLAttributes<HTMLDivElement> 
   totalQuestions: number;
 }
 
+/** Horizontal pill progress. Active segments are pink; pills flex to share the row. */
 export const AssessmentProgress = forwardRef<HTMLDivElement, AssessmentProgressProps>(
   ({ currentQuestion, totalQuestions, className, ...props }, ref) => (
-    <div ref={ref} className={cn('flex justify-center gap-3', className)} {...props}>
+    <div ref={ref} className={cn('flex w-full gap-[10px]', className)} {...props}>
       {Array.from({ length: totalQuestions }).map((_, i) => (
         <span
           key={i}
           style={{
-            width: 13.7,
-            height: 13.7,
-            borderRadius: '50%',
-            background: i < currentQuestion ? '#dfdfdf' : 'transparent',
-            border: '1.3px solid #626262',
+            flex: 1,
+            maxWidth: 64,
+            height: 6,
+            borderRadius: 99,
+            background: i < currentQuestion ? '#f3a9c0' : 'rgba(255,255,255,0.14)',
             display: 'inline-block',
             transition: 'background 0.2s',
           }}

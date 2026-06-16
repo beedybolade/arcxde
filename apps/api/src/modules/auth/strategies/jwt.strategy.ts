@@ -22,19 +22,15 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     });
   }
 
-  // This validate() method is called automatically by Passport after it verifies the token's signature and expiration.
   validate(payload: JwtPayload) {
-    // If the token signature is valid, Passport passes the decoded payload here.
-    console.log('🔑 [JwtStrategy Debug] Full Token Payload:', payload);
     if (!payload.sub) {
       throw new UnauthorizedException('Invalid token structure');
     }
 
-    // Whatever is returned here is automatically attached to req.user
     return {
       id: payload.sub,
       email: payload.email,
-      sessionId: payload.sid, // Include session ID in the payload for session management
+      sessionId: payload.sid,
     };
   }
 }

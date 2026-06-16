@@ -96,7 +96,6 @@ model User {
   identities         Identity[]
   memberships        Membership[]
   teamMembers        TeamMember[]
-  oauthConnections   OAuthConnection[]
   sessions           Session[]
   savedCourses       SavedCourse[]
   savedMedia         SavedMedia[]
@@ -113,6 +112,7 @@ model User {
   assessmentAttempts AssessmentAttempt[]
   lessonProgress   UserLessonProgress[]
   onboarding       UserOnboarding?
+  onboardingResult UserOnboardingResult?
   literaryAssessment UserLiteraryAssessment?
   verificationToken  VerificationToken?
   verificationSessions  EmailVerificationSession[]
@@ -136,12 +136,14 @@ model User {
 // Multiple identities may point to the same user.
 // -----------------------------------------------------------------------------
 model Identity {
-  id                String           @id @default(dbgenerated("'iden_' ||gen_random_uuid()::text")) 
+  id                String           @id @default(dbgenerated("'iden_' ||gen_random_uuid()::text"))
   userId            String           @map("user_id") @db.VarChar(255)
-  provider          IdentityProvider 
+  provider          IdentityProvider
   providerId        String    // Stable unique ID returned by the auth provider. Used to link external identities to internal users.
   passwordHash      String?   // Hashed password (only used for EMAIL_PASSWORD provider; null for OAuth/SSO identities)
   providerEmail     String?
+  resetToken        String?   @unique @map("reset_token") // Password reset token, single-use and time-limited
+  resetTokenExpiry  DateTime? @map("reset_token_expiry") @db.Timestamptz(6) // Expiry time for reset token (15 min from generation)
 
   createdAt         DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt         DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
@@ -220,8 +222,7 @@ model OnboardingQuestion {
   questionKey    String   @map("question_key")    // stable identifier, e.g., "ai_lit_01"
   text           String   @db.Text               // displayed question text
   description    String?  @db.Text               // optional helper text
-  options        Json     // array of option labels, e.g., ["A. Option 1", "B. Option 2", ...]
-  correctAnswer  String   @map("correct_answer") @db.VarChar(10) // the correct answer letter (e.g., "A", "B", "C", "D")
+  options        Json     // array of option labels, e.g., ["I rarely use AI", "I use AI occasionally", ...]
   order          Int      @default(0)
   isActive       Boolean  @default(true) @map("is_active")
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
@@ -263,6 +264,20 @@ model UserOnboardingAnswer {
   @@index([onboardingId])
   @@index([questionId])
   @@map("user_onboarding_answers")
+}
+
+// Computed readiness profile derived from the user's weighted answers
+model UserOnboardingResult {
+  id              String   @id @default(dbgenerated("'ubr_' || gen_random_uuid()::text"))
+  userId          String   @unique @map("user_id")
+  totalScore      Float    @map("total_score")
+  normalizedScore Float    @map("normalized_score")
+  profileKey      String?  @map("profile_key") // e.g., "beginner", "intermediate", "advanced"
+  computedAt      DateTime @default(now()) @map("computed_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_onboarding_results")
 }
 
 // Literary Assessment Questions (AI Literacy Test)
@@ -406,34 +421,6 @@ enum SsoProvider {
 
   @@map("sso_provider")
 }
-
-model OAuthConnection {
-  id           String        @id @default(dbgenerated("'oauth_' || gen_random_uuid()::text"))
-  userId       String        @map("user_id")
-  provider     OAuthProvider
-  providerId   String        @map("provider_id") @db.VarChar(255)
-  accessToken  String        @map("access_token") @db.Text
-  refreshToken String?       @map("refresh_token") @db.Text
-  expiresAt    DateTime?     @map("expires_at") @db.Timestamptz(6)
-  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt    DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerId])
-  @@index([userId])
-  @@map("oauth_connections")
-}
-
-enum OAuthProvider {
-  google
-  github
-  linkedin
-  microsoft
-
-  @@map("oauth_provider")
-}
-
 
 // -----------------------------------------------------------------------------
 // Course Catalog & Learning Content

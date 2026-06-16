@@ -12,12 +12,11 @@
  *     internals, since DomainError.details is opinionated by the throwing
  *     code).
  */
+import type { FastifyReply, FastifyRequest } from 'fastify';
 import { ArgumentsHost, Catch, type ExceptionFilter, HttpException, Logger } from '@nestjs/common';
 import { ZodError } from 'zod';
 
 import { DomainError, isDomainError } from './domain-error.js';
-
-import type { FastifyReply, FastifyRequest } from 'fastify';
 
 interface ErrorPayload {
   status: number;

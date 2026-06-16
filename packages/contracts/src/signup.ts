@@ -73,6 +73,7 @@ export const finalizeRegistrationSchema = z
   .superRefine((data, ctx) => {
     // If one name field is provided, we assume they are attempting a full registration track
     const isAttemptingNameRegistration =
+      // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
       (data.firstName && data.firstName.length > 0) || (data.lastName && data.lastName.length > 0);
 
     if (isAttemptingNameRegistration) {

@@ -7,14 +7,13 @@
  */
 import { Injectable } from '@nestjs/common';
 
-import { PrismaService } from '../prisma/prisma.service.js';
-
 import type { OnboardingQuestion } from '@app/contracts';
+
+import { PrismaService } from '../prisma/prisma.service.js';
 
 export interface QuestionForScoring {
   id: string;
   options: string[];
-  correctAnswer: string;
 }
 
 export interface AnswerRecord {
@@ -58,19 +57,18 @@ export class OnboardingRepository {
     );
   }
 
-  /** Returns questions with correct answers — for internal score computation only. */
+  /** Returns questions for scoring. */
   async findQuestionsForScoring(role: string): Promise<QuestionForScoring[]> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     const rows = await this.prisma.onboardingQuestion.findMany({
       where: { role, isActive: true },
       orderBy: { order: 'asc' },
-      select: { id: true, options: true, correctAnswer: true },
+      select: { id: true, options: true },
     });
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    return rows.map((r: { id: string; options: unknown; correctAnswer: string }) => ({
+    return rows.map((r: { id: string; options: unknown }) => ({
       id: r.id,
       options: r.options as string[],
-      correctAnswer: r.correctAnswer,
     }));
   }
 
@@ -134,5 +132,29 @@ export class OnboardingRepository {
         },
       });
     }
+  }
+
+  /** Persists the computed onboarding result for the user. */
+  async upsertResult(
+    userId: string,
+    totalScore: number,
+    normalizedScore: number,
+    profileKey: string,
+  ): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    await this.prisma.userOnboardingResult.upsert({
+      where: { userId },
+      update: { totalScore, normalizedScore, profileKey, computedAt: new Date() },
+      create: { userId, totalScore, normalizedScore, profileKey },
+    });
+  }
+
+  /** Sets onboardingCompleted flag on the user after successful submission. */
+  async markOnboardingComplete(userId: string): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { onboardingCompleted: true },
+    });
   }
 }

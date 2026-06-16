@@ -11,25 +11,36 @@
  * Response shapes intentionally match the contract envelopes in
  * docs/conventions/api-design.md.
  */
-import {
-  tokenRefreshSchema,
-  type TokenRefreshBody,
-  testEmailSchema,
-  type TestEmailSchema,
-} from '@app/contracts';
+import type { FastifyReply, FastifyRequest } from 'fastify';
 
-import type { FastifyRequest, FastifyReply } from 'fastify';
-import { Controller, Get, HttpCode, Post, Req, Res, UseGuards } from '@nestjs/common';
+import {
+  testEmailSchema,
+  tokenRefreshSchema,
+  type TestEmailSchema,
+  type TokenRefreshBody,
+} from '@app/contracts';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Post,
+  Req,
+  Res,
+  UnauthorizedException,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiTags, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { ApiZodBody } from '../../common/swagger/zod-swagger.decorator.js';
 import { ZodBody } from '../../common/validation/zod.decorators.js';
+import { EmailService } from '../email/email.service.js';
 import { EmailVerificationService } from '../email/verification/email-verification.service.js';
-
 import { AuthService } from './auth.service.js';
+import { ForgotPasswordDto } from './dto/forgot-password.dto.js';
+import { ResetPasswordDto } from './dto/reset-password.dto.js';
 import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
-
 import type { NormalizedProfile } from './models/auth-registration.interface.js';
 
 interface TokenResponse {
@@ -43,6 +54,7 @@ export class AuthController {
   constructor(
     private readonly service: AuthService,
     private readonly emailVerificationService: EmailVerificationService,
+    private readonly emailService: EmailService,
   ) {}
 
   // --------------- GOOGLE OAUTH FLOWS --------------- //
@@ -169,6 +181,39 @@ export class AuthController {
       success: true,
       message: `A test verification email was successfully sent to ${email}`,
       registrationToken: result.registrationToken,
+    };
+  }
+
+  // --------------- PASSWORD RESET FLOW --------------- //
+
+  @Post('forgot-password')
+  @HttpCode(200)
+  @ApiResponse({ status: 200, description: 'Password reset email sent if account exists.' })
+  async forgotPassword(@Body() body: ForgotPasswordDto): Promise<{ message: string }> {
+    const token = await this.service.generatePasswordResetToken(body.email);
+    if (token) {
+      await this.emailService.sendPasswordResetEmail(body.email, token).catch(() => {
+        // Log but don't fail the request
+      });
+    }
+    // Always return success message to avoid email enumeration
+    return {
+      message: 'If an account with that email exists, we have sent a password reset link.',
+    };
+  }
+
+  @Post('reset-password')
+  @HttpCode(200)
+  @ApiResponse({ status: 200, description: 'Password successfully reset.' })
+  @ApiResponse({ status: 401, description: 'Invalid or expired token.' })
+  async resetPassword(@Body() body: ResetPasswordDto): Promise<{ message: string }> {
+    const success = await this.service.resetPassword(body.token, body.newPassword);
+    if (!success) {
+      throw new UnauthorizedException('Invalid or expired reset token');
+    }
+    return {
+      message:
+        'Your password has been successfully updated. You can now log in with your new password.',
     };
   }
 }

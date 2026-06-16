@@ -3,7 +3,7 @@
 import { DashboardSidebar } from '@/components/dashboard-sidebar';
 import { DashboardCard, type ContentType } from '@/components/dashboard-card';
 
-const FONT = "'Suisse Int\\'l', system-ui, sans-serif";
+const FONT = "'Geist', system-ui, sans-serif";
 
 const SIGNALS = [
   { id: '1', title: 'Anthropic reaches $900b valuation' },
@@ -41,7 +41,7 @@ const COMMUNITY = [
 export default function DashboardPage() {
   return (
     <div
-      className="bg-[#222]"
+      className="bg-[#1a1918]"
       style={{ minHeight: 1402, position: 'relative', overflow: 'hidden' }}
     >
       <DashboardSidebar />

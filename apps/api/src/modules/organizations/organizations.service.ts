@@ -9,21 +9,19 @@
  * This is the layer that's directly unit-tested. Controllers and repositories
  * are wired in higher-level tests.
  */
-import { Injectable } from '@nestjs/common';
-
-import { DomainError } from '../../common/errors/domain-error.js';
-
-import {
-  type ListOrganizationsInput,
-  OrganizationsRepository,
-} from './organizations.repository.js';
-
 import type {
   CreateOrganizationBody,
   Organization,
   PaginationMeta,
   UpdateOrganizationBody,
 } from '@app/contracts';
+import { Injectable } from '@nestjs/common';
+
+import { DomainError } from '../../common/errors/domain-error.js';
+import {
+  type ListOrganizationsInput,
+  OrganizationsRepository,
+} from './organizations.repository.js';
 
 @Injectable()
 export class OrganizationsService {

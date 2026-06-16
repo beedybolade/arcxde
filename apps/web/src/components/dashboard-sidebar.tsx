@@ -4,7 +4,7 @@ import { HTMLAttributes } from 'react';
 import { cn } from '@/lib/cn';
 import { SlantEgg } from '@/components/slant-egg';
 
-const FONT = "'Suisse Int\\'l', system-ui, sans-serif";
+const FONT = "'Geist', system-ui, sans-serif";
 
 interface NavItem {
   label: string;
@@ -37,7 +37,7 @@ const BOTTOM_ITEM: NavItem = {
 
 export const DashboardSidebar = ({ className, ...props }: HTMLAttributes<HTMLDivElement>) => (
   <div
-    className={cn('fixed left-0 top-0 h-screen bg-[#222]', className)}
+    className={cn('fixed left-0 top-0 h-screen bg-[#1a1918]', className)}
     style={{ width: 244, borderRight: '1px solid #3e3e3e' }}
     {...props}
   >

@@ -4,25 +4,21 @@ import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { useFinalizeSignup } from '../../../lib/hooks/useAuth';
-import { SlantEgg } from '@/components/slant-egg';
-import Link from 'next/link';
+import { AuthLayout } from '@/components/layouts/auth-layout';
+import { FormInput } from '@/components/form-input';
 
-const FONT = "'Suisse Int\\'l', system-ui, sans-serif";
+const FONT = "'Geist', system-ui, sans-serif";
 
 function FinalizeSignupContent() {
   const searchParams = useSearchParams();
 
-  // Grab parameters out of the URL string
   const token = searchParams.get('token');
   const status = searchParams.get('status');
 
-  // Check if the user track is strictly account linking (e.g., OAuth returning user adding a password)
   const isLinkFlow = status === 'PENDING_REGISTRATION';
 
-  // Consume the custom authentication hook capabilities
   const { finalizeSignup, isFinalizing, finalizeError, clearFinalizeError } = useFinalizeSignup();
 
-  // Keep local UI form state minimal
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',
@@ -36,7 +32,6 @@ function FinalizeSignupContent() {
     setLocalError(null);
     clearFinalizeError();
 
-    // Update validation criteria based on active user context track
     const isPasswordInvalid = !form.password || !form.confirmPassword;
     const isNameInvalid = !isLinkFlow && (!form.firstName.trim() || !form.lastName.trim());
 
@@ -74,182 +69,128 @@ function FinalizeSignupContent() {
   const activeDisplayError = finalizeError || localError;
 
   return (
-    <div className="min-h-screen bg-[#222] overflow-hidden flex">
-      {/* ── LEFT: branding ─────────────────────────────── */}
-      <div className="relative flex flex-1 items-center justify-center">
-        <SlantEgg size="lg" showText />
-        <div
-          style={{
-            position: 'absolute',
-            right: 0,
-            top: '50%',
-            transform: 'translateY(-50%)',
-            width: 1,
-            height: '69%',
-            borderRight: '1px solid #6b6b6b',
-          }}
-        />
-      </div>
-
-      {/* ── RIGHT: profile finalization form ─────────────── */}
-      <div className="flex flex-1 flex-col justify-center px-16 py-16">
-        {/* Back arrow — in flow, above heading */}
-        <Link
-          href="/signup"
-          style={{
-            fontFamily: FONT,
-            fontSize: 32,
-            fontWeight: 100,
-            lineHeight: '100%',
-            color: 'white',
-            textDecoration: 'none',
-            marginBottom: 24,
-            display: 'block',
-          }}
-        >
-          ←
-        </Link>
-
-        {/* Dynamic Heading */}
+    <AuthLayout
+      brandText={isLinkFlow ? 'Secure your account' : 'Complete your profile'}
+      brandDescription={
+        isLinkFlow
+          ? 'Add email access to your account by choosing a secure password.'
+          : 'Please provide your details below to activate your account.'
+      }
+    >
+      <div
+        style={{
+          border: '1px solid rgba(255,255,255,0.16)',
+          borderRadius: 34,
+          padding: 'clamp(32px, 5vw, 46px) clamp(24px, 5vw, 42px)',
+        }}
+      >
         <h1
           style={{
             fontFamily: FONT,
-            fontSize: 32,
-            fontWeight: 450,
-            lineHeight: '100%',
-            color: 'white',
-            marginBottom: 18,
+            fontSize: 'clamp(24px, 5vw, 34px)',
+            fontWeight: 500,
+            letterSpacing: '-0.5px',
+            color: '#ece9e3',
+            textAlign: 'center',
+            margin: 0,
           }}
         >
           {isLinkFlow ? 'Create a password' : 'Complete your profile'}
         </h1>
 
-        {/* Dynamic Subtitle */}
-        <p
-          style={{
-            fontFamily: FONT,
-            fontSize: 24,
-            fontWeight: 100,
-            lineHeight: '100%',
-            color: '#aaa',
-            marginBottom: 48,
-          }}
-        >
-          {isLinkFlow
-            ? 'Add email access to your account by choosing a secure password.'
-            : 'Please provide your details below to activate your account.'}
-        </p>
-
-        {/* Server/Validation Error Banner */}
         {activeDisplayError && (
-          <div className="p-3 mb-6 text-sm text-red-400 bg-red-950/50 rounded-md border border-red-900/50 flex justify-between items-start">
-            <span>{activeDisplayError}</span>
+          <div
+            style={{
+              padding: 12,
+              marginBottom: 22,
+              marginTop: 16,
+              fontSize: 14,
+              color: '#ff8a8a',
+              background: 'rgba(255,80,80,0.08)',
+              borderRadius: 12,
+              border: '1px solid rgba(255,80,80,0.25)',
+            }}
+          >
+            {activeDisplayError}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5 max-w-xl">
-          {/* 💡 OMITTED CONDITIONAL LAYOUT: Hide profile collection field inputs on account links */}
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4 mt-6">
           {!isLinkFlow && (
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-white mb-1.5">
-                  First Name
-                </label>
-                <input
-                  type="text"
-                  required
-                  disabled={isFinalizing}
-                  placeholder="John"
-                  className="w-full bg-[#1a1a1a] border border-[#444] p-3 text-sm rounded-md text-white placeholder-gray-600 focus:outline-none focus:border-white disabled:bg-neutral-900 disabled:text-neutral-600 transition-colors"
-                  value={form.firstName}
-                  onChange={(e) => setForm({ ...form, firstName: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-white mb-1.5">
-                  Last Name
-                </label>
-                <input
-                  type="text"
-                  required
-                  disabled={isFinalizing}
-                  placeholder="Doe"
-                  className="w-full bg-[#1a1a1a] border border-[#444] p-3 text-sm rounded-md text-white placeholder-gray-600 focus:outline-none focus:border-white disabled:bg-neutral-900 disabled:text-neutral-600 transition-colors"
-                  value={form.lastName}
-                  onChange={(e) => setForm({ ...form, lastName: e.target.value })}
-                />
-              </div>
+            <div className="flex flex-col sm:grid sm:grid-cols-2 sm:gap-4 gap-4">
+              <FormInput
+                label="First Name"
+                type="text"
+                required
+                disabled={isFinalizing}
+                placeholder="John"
+                value={form.firstName}
+                onChange={(e) => setForm({ ...form, firstName: e.target.value })}
+              />
+              <FormInput
+                label="Last Name"
+                type="text"
+                required
+                disabled={isFinalizing}
+                placeholder="Doe"
+                value={form.lastName}
+                onChange={(e) => setForm({ ...form, lastName: e.target.value })}
+              />
             </div>
           )}
 
-          {/* New Password Input */}
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-white mb-1.5">
-              Password
-            </label>
-            <input
-              type="password"
-              required
-              minLength={8}
-              disabled={isFinalizing}
-              placeholder="••••••••"
-              className="w-full bg-[#1a1a1a] border border-[#444] p-3 text-sm rounded-md text-white placeholder-gray-600 focus:outline-none focus:border-white disabled:bg-neutral-900 disabled:text-neutral-600 transition-colors"
-              value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
-            />
-          </div>
+          <FormInput
+            label="Password"
+            type="password"
+            required
+            minLength={8}
+            disabled={isFinalizing}
+            placeholder="••••••••"
+            value={form.password}
+            onChange={(e) => setForm({ ...form, password: e.target.value })}
+          />
 
-          {/* Confirm Password Input */}
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-white mb-1.5">
-              Confirm Password
-            </label>
-            <input
-              type="password"
-              required
-              disabled={isFinalizing}
-              placeholder="••••••••"
-              className="w-full bg-[#1a1a1a] border border-[#444] p-3 text-sm rounded-md text-white placeholder-gray-600 focus:outline-none focus:border-white disabled:bg-neutral-900 disabled:text-neutral-600 transition-colors"
-              value={form.confirmPassword}
-              onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
-            />
-          </div>
+          <FormInput
+            label="Confirm Password"
+            type="password"
+            required
+            disabled={isFinalizing}
+            placeholder="••••••••"
+            value={form.confirmPassword}
+            onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
+          />
 
-          {/* Submit Button Action */}
           <button
             type="submit"
             disabled={isFinalizing}
-            className="w-full bg-white text-black p-3 rounded-md font-medium text-sm hover:bg-gray-200 transition-colors disabled:bg-gray-600 disabled:text-gray-400 mt-4 flex items-center justify-center"
+            style={{
+              width: '100%',
+              marginTop: 8,
+              padding: '20px',
+              borderRadius: 18,
+              border: 'none',
+              background: 'linear-gradient(180deg,#fbf8f1,#ece7db)',
+              color: '#1a1917',
+              fontFamily: FONT,
+              fontSize: 17,
+              fontWeight: 500,
+              cursor: isFinalizing ? 'default' : 'pointer',
+              opacity: isFinalizing ? 0.5 : 1,
+              boxShadow: '0 12px 30px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.7)',
+              transition: 'opacity .15s ease',
+            }}
           >
-            {isFinalizing ? (
-              <span className="flex items-center gap-2">
-                <svg className="animate-spin h-4 w-4 text-black" fill="none" viewBox="0 0 24 24">
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    id="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  />
-                </svg>
-                {isLinkFlow ? 'Linking identity track...' : 'Setting up account...'}
-              </span>
-            ) : isLinkFlow ? (
-              'Link Account & Sign In'
-            ) : (
-              'Complete Registration'
-            )}
+            {isFinalizing
+              ? isLinkFlow
+                ? 'Linking identity track...'
+                : 'Setting up account...'
+              : isLinkFlow
+                ? 'Link Account & Sign In'
+                : 'Complete Registration'}
           </button>
         </form>
       </div>
-    </div>
+    </AuthLayout>
   );
 }
 
@@ -257,16 +198,11 @@ export default function FinalizeSignupPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#222] flex items-center justify-center">
-          <p
-            style={{
-              fontFamily: "'Suisse Int\\'l', system-ui, sans-serif",
-              color: 'white',
-              fontSize: 18,
-            }}
-          >
-            Loading...
-          </p>
+        <div
+          className="flex min-h-screen items-center justify-center"
+          style={{ background: '#272727' }}
+        >
+          <p style={{ fontFamily: FONT, color: '#ece9e3', fontSize: 18 }}>Loading...</p>
         </div>
       }
     >
