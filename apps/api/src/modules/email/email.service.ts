@@ -12,7 +12,7 @@ export class EmailService {
   constructor(private readonly configService: ConfigService) {
     const apiKey = this.configService.get<string>('RESEND_API_KEY');
     this.fromAddress =
-      this.configService.get<string>('EMAIL_FROM_ADDRESS') ?? 'no-reply@arcxde.com';
+      this.configService.get<string>('EMAIL_FROM_ADDRESS') ?? 'no-reply@agxnda.com';
 
     if (!apiKey) {
       this.logger.warn('⚠️ RESEND_API_KEY is missing. Inbound verification emails will fail.');

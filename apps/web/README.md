@@ -1,6 +1,6 @@
 # @app/web
 
-arcxde web app — Next.js 15 App Router, Tailwind v4, Radix primitives.
+agxnda web app — Next.js 15 App Router, Tailwind v4, Radix primitives.
 
 ## Design system
 
