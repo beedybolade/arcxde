@@ -38,8 +38,8 @@ export const useUserStore = create<UserState>()(
       // Dynamically namespaces the storage block by domain
       name:
         typeof window !== 'undefined'
-          ? `arcxde-auth:${window.location.hostname}`
-          : 'arcxde-auth:fallback',
+          ? `agxnda-auth:${window.location.hostname}`
+          : 'agxnda-auth:fallback',
       storage: createJSONStorage(() => localStorage),
       onRehydrateStorage: () => (state) => {
         state?.setHydrated(true);

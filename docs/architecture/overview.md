@@ -8,13 +8,13 @@
 
 ## 1. Purpose
 
-This document describes arcxde at the **system level**: components, boundaries, data flow, and the non-functional properties we optimize for. For implementation details, follow the links to backend, frontend, and database docs.
+This document describes agxnda at the **system level**: components, boundaries, data flow, and the non-functional properties we optimize for. For implementation details, follow the links to backend, frontend, and database docs.
 
 ---
 
 ## 2. Architecture Style
 
-arcxde is a **modular monolith** with clean module boundaries, designed to **extract into microservices** only when forced by scale or org structure — not before.
+agxnda is a **modular monolith** with clean module boundaries, designed to **extract into microservices** only when forced by scale or org structure — not before.
 
 **Why a modular monolith first?**
 

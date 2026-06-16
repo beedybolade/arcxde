@@ -183,7 +183,7 @@ export const AssessmentQuestion = forwardRef<HTMLDivElement, AssessmentQuestionP
               paddingTop: 32,
             }}
           >
-            Answer just {totalQuestions} questions to help us personalise your Arcxde experience.
+            Answer just {totalQuestions} questions to help us personalise your Agxnda experience.
           </p>
         )}
       </div>

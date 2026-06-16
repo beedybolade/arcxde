@@ -1,5 +1,5 @@
 // =============================================================================
-// arcxde — Prisma schema
+// agxnda — Prisma schema
 //
 // Conventions (see docs/architecture/database.md):
 //   - PascalCase model names → snake_case tables via @@map

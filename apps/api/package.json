@@ -2,7 +2,7 @@
   "name": "@app/api",
   "version": "0.0.0",
   "private": true,
-  "description": "arcxde HTTP API — NestJS  + Prisma.",
+  "description": "agxnda HTTP API — NestJS  + Prisma.",
   "main": "dist/main.js",
   "scripts": {
     "build": "nest build",
