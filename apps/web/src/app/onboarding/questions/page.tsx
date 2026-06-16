@@ -2,9 +2,7 @@
 
 import { Suspense } from 'react';
 import { useState } from 'react';
-import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { SlantEgg } from '@/components/slant-egg';
 import { AssessmentQuestion } from '@/components/assessment-question';
 import { useOnboardingQuestions, useSubmitOnboarding } from '@/lib/hooks/useOnboarding';
 import { useUserStore } from '@/store/user-store';
@@ -28,26 +26,10 @@ const continueBtnStyle = (enabled: boolean): React.CSSProperties => ({
   transition: 'opacity .15s ease',
 });
 
-const BackArrow = () => (
-  <svg
-    width="30"
-    height="30"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.6"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <line x1="19" y1="12" x2="5" y2="12" />
-    <polyline points="12 19 5 12 12 5" />
-  </svg>
-);
-
 const ScreenShell = ({ children }: { children: React.ReactNode }) => (
   <div
     className="flex min-h-screen items-center justify-center"
-    style={{ background: '#1a1918', fontFamily: FONT }}
+    style={{ background: '#272727', fontFamily: FONT }}
   >
     {children}
   </div>
@@ -86,7 +68,6 @@ function OnboardingQuestionsContent() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
-  // Wait for Zustand rehydrate before rendering content that needs persisted state
   if (!hasHydrated) {
     return (
       <ScreenShell>
@@ -102,6 +83,14 @@ function OnboardingQuestionsContent() {
   const handleSelect = (answerId: string) => {
     if (q) {
       setAnswers((prev) => ({ ...prev, [q.id]: answerId }));
+    }
+  };
+
+  const handleBack = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex((i) => i - 1);
+    } else {
+      router.push('/signup/role');
     }
   };
 
@@ -170,28 +159,20 @@ function OnboardingQuestionsContent() {
 
   return (
     <CenteredLayout>
-      <div
-        style={
-          {
-            // border: '1px solid rgba(255,255,255,0.16)',
-            // borderRadius: 34,
-            // padding: 'clamp(28px, 5vw, 48px) clamp(24px, 5vw, 44px)',
-          }
-        }
-      >
-        {q && (
-          <AssessmentQuestion
-            questionNumber={currentIndex + 1}
-            roleContext={currentRole}
-            question={q.text}
-            answers={q.options.map((opt, idx) => ({ id: String(idx), text: opt }))}
-            selectedAnswerId={answers[q.id]}
-            onAnswerSelect={handleSelect}
-            currentQuestion={currentIndex + 1}
-            totalQuestions={questions.length}
-          />
-        )}
-      </div>
+      {q && (
+        <AssessmentQuestion
+          questionNumber={currentIndex + 1}
+          roleContext={currentRole}
+          question={q.text}
+          answers={q.options.map((opt, idx) => ({ id: String(idx), text: opt }))}
+          selectedAnswerId={answers[q.id]}
+          onAnswerSelect={handleSelect}
+          currentQuestion={currentIndex + 1}
+          totalQuestions={questions.length}
+          onBack={handleBack}
+          showHint
+        />
+      )}
 
       {submitError && (
         <p style={{ fontFamily: FONT, fontSize: 14, color: '#ff8a8a', margin: 0 }}>
@@ -216,7 +197,7 @@ export default function OnboardingQuestionsPage() {
       fallback={
         <div
           className="flex min-h-screen items-center justify-center"
-          style={{ background: '#1a1918' }}
+          style={{ background: '#272727' }}
         >
           <p style={{ fontFamily: FONT, color: '#ece9e3', fontSize: 18 }}>Loading...</p>
         </div>

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { AuthLayout } from '@/components/auth-layout';
+import { AuthLayout } from '@/components/layouts/auth-layout';
 import { RoleCard } from '@/components/role-card';
 
 const FONT = "'Geist', system-ui, sans-serif";

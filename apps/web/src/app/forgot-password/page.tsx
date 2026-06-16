@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { AuthLayout } from '@/components/auth-layout';
+import { AuthLayout } from '@/components/layouts/auth-layout';
 import { FormInput } from '@/components/form-input';
 
 const FONT = "'Geist', system-ui, sans-serif";

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { AuthLayout } from '@/components/auth-layout';
+import { AuthLayout } from '@/components/layouts/auth-layout';
 import { GoogleButton } from '@/components/google-button';
 import { FormInput } from '@/components/form-input';
 import { useGoogleAuth, useSendVerificationEmail } from '@/lib/hooks/useAuth';

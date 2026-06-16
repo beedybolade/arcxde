@@ -3,6 +3,9 @@
 import { useState, useEffect } from 'react';
 import { SlantEgg } from '@/components/slant-egg';
 import { AssessmentQuestion } from '@/components/assessment-question';
+import { Chip } from '@/components/ui/chip';
+import { Countdown } from '@/components/ui/countdown';
+import { ClipboardIcon } from 'lucide-react';
 
 const FONT = "'Geist', system-ui, sans-serif";
 
@@ -253,15 +256,21 @@ export default function AssessmentPage() {
   const q = QUESTIONS[currentIndex];
   const isLast = currentIndex === QUESTIONS.length - 1;
   const isAnswered = !!answers[q.id];
+  const questionsLeft = QUESTIONS.length - currentIndex - 1;
 
   const handleSelect = (answerId: string) => setAnswers((prev) => ({ ...prev, [q.id]: answerId }));
 
   const handleContinue = () => {
     if (isLast) {
-      console.log('Assessment complete:', answers);
+      handleSubmit();
     } else {
       setCurrentIndex((i) => i + 1);
     }
+  };
+
+  const handleSubmit = () => {
+    console.log('Assessment complete:', answers);
+    // router.push('/dashboard') or whatever comes next
   };
 
   return (
@@ -286,6 +295,13 @@ export default function AssessmentPage() {
           Answer 20 questions about AI literacy to complete your assessment.
         </h1>
 
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Countdown initialSeconds={5 * 60} onElapse={handleSubmit} />
+          <Chip icon={<ClipboardIcon />}>
+            {questionsLeft} question{questionsLeft !== 1 ? 's' : ''} left
+          </Chip>
+        </div>
+
         <AssessmentQuestion
           questionNumber={currentIndex + 1}
           roleContext="AI Literacy"
@@ -295,6 +311,7 @@ export default function AssessmentPage() {
           onAnswerSelect={handleSelect}
           currentQuestion={currentIndex + 1}
           totalQuestions={QUESTIONS.length}
+          showProgress
         />
 
         <button
@@ -302,7 +319,7 @@ export default function AssessmentPage() {
           onClick={handleContinue}
           style={continueBtnStyle(isAnswered)}
         >
-          {isLast ? 'Submit' : 'Continue'}
+          {isLast ? 'Finish' : 'Next Question'}
         </button>
       </div>
     </div>

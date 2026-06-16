@@ -4,7 +4,7 @@ import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { useFinalizeSignup } from '../../../lib/hooks/useAuth';
-import { AuthLayout } from '@/components/auth-layout';
+import { AuthLayout } from '@/components/layouts/auth-layout';
 import { FormInput } from '@/components/form-input';
 
 const FONT = "'Geist', system-ui, sans-serif";
