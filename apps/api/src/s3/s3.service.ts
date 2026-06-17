@@ -1,3 +1,4 @@
+import { Readable } from 'stream';
 import {
   Injectable,
   Logger,
@@ -16,7 +17,6 @@ import {
   type S3ClientConfig,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { Readable } from 'stream';
 import { S3UploadOptions, S3FileStream, S3ObjectMetadata, S3DeleteResult } from './s3.types';
 
 @Injectable()
@@ -26,7 +26,7 @@ export class S3Service {
   private readonly bucketName: string;
 
   constructor(private configService: ConfigService) {
-    const region = this.configService.get<string>('s3.region') || 'us-east-1';
+    const region = this.configService.get<string>('s3.region') ?? 'us-east-1';
     const accessKeyId = this.configService.get<string>('s3.accessKeyId');
     const secretAccessKey = this.configService.get<string>('s3.secretAccessKey');
     const bucketName = this.configService.get<string>('s3.bucketName');
@@ -40,8 +40,8 @@ export class S3Service {
     const clientConfig: S3ClientConfig = {
       region,
       credentials: {
-        accessKeyId: accessKeyId || '',
-        secretAccessKey: secretAccessKey || '',
+        accessKeyId: accessKeyId ?? '',
+        secretAccessKey: secretAccessKey ?? '',
       },
     };
 
@@ -101,11 +101,11 @@ export class S3Service {
 
       return {
         stream: response.Body as Readable,
-        contentType: response.ContentType || undefined,
+        contentType: response.ContentType ?? undefined,
         contentLength: response.ContentLength,
         contentRange: response.ContentRange,
         etag: response.ETag,
-        statusCode: response.$metadata.httpStatusCode || 200,
+        statusCode: response.$metadata.httpStatusCode ?? 200,
       };
     } catch (error) {
       const err = error as { name?: string; Code?: string; message?: string };
@@ -172,7 +172,7 @@ export class S3Service {
         etag: response.ETag,
         lastModified: response.LastModified,
         storageClass: response.StorageClass,
-      } as S3ObjectMetadata;
+      };
     } catch (error) {
       const err = error as { Code?: string; name?: string; message?: string };
       if (err.Code === 'NotFound' || err.name === 'NotFound') {
@@ -227,20 +227,27 @@ export class S3Service {
       const results: S3DeleteResult[] = [];
 
       if (response.Deleted) {
-        response.Deleted.forEach((item: any) => {
-          results.push({ key: item.Key, success: true });
-          this.logger.log(`File deleted: ${item.Key}`);
+        response.Deleted.forEach((item) => {
+          if (item.Key) {
+            results.push({ key: item.Key, success: true });
+            this.logger.log(`File deleted: ${item.Key}`);
+          }
         });
       }
 
       if (response.Errors) {
-        response.Errors.forEach((error: any) => {
-          results.push({
-            key: error.Key,
-            success: false,
-            error: error.Message,
-          });
-          this.logger.warn(`Failed to delete ${error.Key}: ${error.Message}`);
+        response.Errors.forEach((error) => {
+          if (error.Key) {
+            const result: S3DeleteResult = {
+              key: error.Key,
+              success: false,
+            };
+            if (error.Message) {
+              result.error = error.Message;
+            }
+            results.push(result);
+            this.logger.warn(`Failed to delete ${error.Key}: ${error.Message}`);
+          }
         });
       }
 
@@ -259,7 +266,7 @@ export class S3Service {
    * @returns Presigned URL valid for the specified duration
    * @throws InternalServerErrorException if generation fails
    */
-  async generatePresignedUrl(key: string, expiresIn: number = 3600): Promise<string> {
+  async generatePresignedUrl(key: string, expiresIn = 3600): Promise<string> {
     try {
       const command = new GetObjectCommand({
         Bucket: this.bucketName,

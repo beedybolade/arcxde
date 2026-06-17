@@ -1,5 +1,5 @@
-import { Readable } from 'stream';
-import { StorageClass } from '@aws-sdk/client-s3';
+import type { Readable } from 'stream';
+import type { StorageClass } from '@aws-sdk/client-s3';
 
 export interface S3UploadOptions {
   contentType?: string;

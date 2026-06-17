@@ -1,6 +1,7 @@
 'use client';
 
 import { HTMLAttributes } from 'react';
+import Image from 'next/image';
 import { cn } from '@/lib/cn';
 import { SlantEgg } from '@/components/slant-egg';
 
@@ -64,10 +65,7 @@ export const DashboardSidebar = ({ className, ...props }: HTMLAttributes<HTMLDiv
               textDecoration: 'none',
             }}
           >
-            <img
-              src={item.iconSrc}
-              alt=""
-              aria-hidden
+            <div
               style={{
                 position: 'absolute',
                 left: 51,
@@ -75,7 +73,16 @@ export const DashboardSidebar = ({ className, ...props }: HTMLAttributes<HTMLDiv
                 height: 42,
                 opacity: item.active ? 1 : 0.7,
               }}
-            />
+            >
+              <Image
+                src={item.iconSrc}
+                alt=""
+                aria-hidden
+                width={42}
+                height={42}
+                style={{ objectFit: 'contain' }}
+              />
+            </div>
             <span
               style={{
                 position: 'absolute',
@@ -106,12 +113,16 @@ export const DashboardSidebar = ({ className, ...props }: HTMLAttributes<HTMLDiv
         textDecoration: 'none',
       }}
     >
-      <img
-        src={BOTTOM_ITEM.iconSrc}
-        alt=""
-        aria-hidden
-        style={{ position: 'absolute', left: 51, width: 51, height: 51, opacity: 0.7 }}
-      />
+      <div style={{ position: 'absolute', left: 51, width: 51, height: 51, opacity: 0.7 }}>
+        <Image
+          src={BOTTOM_ITEM.iconSrc}
+          alt=""
+          aria-hidden
+          width={51}
+          height={51}
+          style={{ objectFit: 'contain' }}
+        />
+      </div>
       <span
         style={{
           position: 'absolute',
