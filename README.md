@@ -1,4 +1,4 @@
-# arcxde
+# agxnda
 
 > Enterprise-grade platform built on **NestJS**, **Next.js**, **PostgreSQL**, and **Prisma**.
 > Documentation-first. Performance-obsessed. Automation-native.
@@ -20,7 +20,7 @@
 
 ## Project Overview
 
-arcxde is a [one-line product description, e.g. "B2B automation platform that..."].
+agxnda is a [one-line product description, e.g. "B2B automation platform that..."].
 
 **North-star metrics**
 
@@ -65,7 +65,7 @@ See [`docs/adr/`](./docs/adr/) for the _why_ behind each choice.
 This is a **pnpm workspace monorepo**.
 
 ```
-arcxde/
+agxnda/
 ├── apps/
 │   ├── api/                  # NestJS backend
 │   │   ├── src/
@@ -116,8 +116,8 @@ arcxde/
 
 ```bash
 # 1. Clone and install
-git clone <repo-url> arcxde
-cd arcxde
+git clone <repo-url> agxnda
+cd agxnda
 pnpm install
 
 # 2. Boot local infrastructure (Postgres + Redis)
@@ -204,10 +204,10 @@ Every PR must pass:
 
 ## Support
 
-- **Engineering Slack:** `#eng-arcxde`
+- **Engineering Slack:** `#eng-agxnda`
 - **On-call rotation:** see [`docs/confluence/incident-response.md`](./docs/confluence/incident-response.md)
 - **Status page:** [status.example.com](#)
-- **Confluence space:** arcxde Engineering
+- **Confluence space:** agxnda Engineering
 
 ---
 

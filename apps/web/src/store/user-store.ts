@@ -35,7 +35,11 @@ export const useUserStore = create<UserState>()(
       setHydrated: (hydrated) => set({ hasHydrated: hydrated }),
     }),
     {
-      name: 'user-storage',
+      // Dynamically namespaces the storage block by domain
+      name:
+        typeof window !== 'undefined'
+          ? `agxnda-auth:${window.location.hostname}`
+          : 'agxnda-auth:fallback',
       storage: createJSONStorage(() => localStorage),
       onRehydrateStorage: () => (state) => {
         state?.setHydrated(true);

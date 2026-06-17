@@ -13,11 +13,11 @@
  * Prefer these over the raw pipe — they remove the `new ZodValidationPipe(...)` noise
  * from every controller method.
  */
+import type { ZodSchema } from 'zod';
+
 import { Body, Param, Query } from '@nestjs/common';
 
 import { ZodValidationPipe } from './zod-validation.pipe.js';
-
-import type { ZodSchema } from 'zod';
 
 export const ZodBody = <T>(schema: ZodSchema<T>): ParameterDecorator =>
   Body(new ZodValidationPipe(schema));

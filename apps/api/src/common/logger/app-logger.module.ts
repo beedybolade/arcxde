@@ -57,7 +57,7 @@ const REDACT_PATHS = [
             res: (res: { statusCode: number }) => ({ statusCode: res.statusCode }),
           },
           customLogLevel: (_req: unknown, res: { statusCode: number }, err: unknown) => {
-            if (err ?? res.statusCode >= 500) {
+            if (err || res.statusCode >= 500) {
               return 'error';
             }
             if (res.statusCode >= 400) {

@@ -210,7 +210,7 @@ export default async function HomePage() {
             <CardContent className="space-y-4">
               <div className="space-y-1.5">
                 <Label htmlFor="demo-email">Email</Label>
-                <Input id="demo-email" type="email" placeholder="you@arcxde.io" />
+                <Input id="demo-email" type="email" placeholder="you@agxnda.io" />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="demo-error">Slug</Label>

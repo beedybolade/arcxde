@@ -15,11 +15,11 @@
  *   @Post()
  *   create(@ZodBody(createOrganizationBodySchema) body: CreateOrganizationBody) { ... }
  */
+import type { ZodSchema } from 'zod';
+
 import { type ArgumentMetadata, Injectable, type PipeTransform } from '@nestjs/common';
 
 import { DomainError } from '../errors/domain-error.js';
-
-import type { ZodSchema } from 'zod';
 
 @Injectable()
 export class ZodValidationPipe<T> implements PipeTransform<unknown, T> {

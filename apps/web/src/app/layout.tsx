@@ -16,24 +16,38 @@ import './globals.css';
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000'),
   title: {
-    default: 'arcxde',
-    template: '%s · arcxde',
+    default: 'agxnda',
+    template: '%s · agxnda',
   },
   description: 'A learning platform for teams who actually want to learn.',
-  applicationName: 'arcxde',
-  authors: [{ name: 'arcxde' }],
+  applicationName: 'agxnda',
+  authors: [{ name: 'agxnda' }],
   formatDetection: { telephone: false, email: false, address: false },
   openGraph: {
     type: 'website',
-    title: 'arcxde',
+    title: 'agxnda',
     description: 'A learning platform for teams who actually want to learn.',
   },
 };
 
+// export default function RootLayout({ children }: { children: React.ReactNode }) {
+//   return (
+//     <html lang="en" suppressHydrationWarning  className="h-full">
+// {/* <body className="min-h-[100dvh] overflow-y-auto"> */}
+//       <body className={`${fontVariables}  antialiased bg-background bg-grain text-foreground`}>
+//         <ReactQueryProvider>{children}</ReactQueryProvider>
+//       </body>
+//     </html>
+//   );
+// }
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${fontVariables} antialiased bg-background bg-grain text-foreground`}>
+      <body
+        className={`${fontVariables} antialiased bg-background bg-grain text-foreground`}
+        style={{ background: '#272727' }}
+      >
         <ReactQueryProvider>{children}</ReactQueryProvider>
       </body>
     </html>

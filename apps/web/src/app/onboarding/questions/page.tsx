@@ -2,15 +2,38 @@
 
 import { Suspense } from 'react';
 import { useState } from 'react';
-import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { SlantEgg } from '@/components/slant-egg';
 import { AssessmentQuestion } from '@/components/assessment-question';
-import { AssessmentProgress } from '@/components/assessment-progress';
 import { useOnboardingQuestions, useSubmitOnboarding } from '@/lib/hooks/useOnboarding';
 import { useUserStore } from '@/store/user-store';
+import { CenteredLayout } from '@/components/layouts/centered-layout';
 
-const FONT = "'Suisse Int\\'l', system-ui, sans-serif";
+const FONT = "'Geist', system-ui, sans-serif";
+
+const continueBtnStyle = (enabled: boolean): React.CSSProperties => ({
+  width: '100%',
+  padding: '22px',
+  borderRadius: 18,
+  border: 'none',
+  cursor: enabled ? 'pointer' : 'default',
+  fontFamily: FONT,
+  fontSize: 18,
+  fontWeight: 500,
+  color: '#1a1917',
+  background: 'linear-gradient(180deg,#fbf8f1,#ece7db)',
+  boxShadow: '0 12px 30px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.7)',
+  opacity: enabled ? 1 : 0.82,
+  transition: 'opacity .15s ease',
+});
+
+const ScreenShell = ({ children }: { children: React.ReactNode }) => (
+  <div
+    className="flex min-h-screen items-center justify-center"
+    style={{ background: '#272727', fontFamily: FONT }}
+  >
+    {children}
+  </div>
+);
 
 interface Question {
   id: string;
@@ -45,12 +68,11 @@ function OnboardingQuestionsContent() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
-  // Wait for Zustand rehydrate before rendering content that needs persisted state
   if (!hasHydrated) {
     return (
-      <div className="min-h-screen bg-[#222] flex items-center justify-center">
-        <p style={{ color: '#aaa', fontSize: 16 }}>Loading...</p>
-      </div>
+      <ScreenShell>
+        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 16 }}>Loading...</p>
+      </ScreenShell>
     );
   }
 
@@ -64,8 +86,20 @@ function OnboardingQuestionsContent() {
     }
   };
 
+  const handleBack = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex((i) => i - 1);
+    } else {
+      router.push('/signup/role');
+    }
+  };
+
   const handleContinue = () => {
-    if (isLast && userId && currentRole) {
+    if (isLast) {
+      if (!userId || !currentRole) {
+        router.push('/signup/role');
+        return;
+      }
       const formattedAnswers = Object.entries(answers).map(([questionId, answerIdx]) => {
         const question = questions.find((q) => q.id === questionId);
         const selectedOption = question?.options[parseInt(answerIdx)] || answerIdx;
@@ -94,109 +128,54 @@ function OnboardingQuestionsContent() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#222] flex items-center justify-center">
-        <p style={{ fontFamily: FONT, color: 'white', fontSize: 18 }}>Loading questions...</p>
-      </div>
+      <ScreenShell>
+        <p style={{ color: '#ece9e3', fontSize: 18 }}>Loading questions...</p>
+      </ScreenShell>
     );
   }
 
-  if (questionsError || !currentRole || !userId) {
+  if (!currentRole) {
+    router.push('/signup/role');
+    return null;
+  }
+
+  if (questionsError) {
     return (
-      <div className="min-h-screen bg-[#222] flex items-center justify-center">
-        <p style={{ fontFamily: FONT, color: '#ff6b6b', fontSize: 18 }}>
+      <ScreenShell>
+        <p style={{ color: '#ff8a8a', fontSize: 18 }}>
           {questionsError?.message || 'Error loading questions'}
         </p>
-      </div>
+      </ScreenShell>
     );
   }
 
   if (questions.length === 0) {
     return (
-      <div className="min-h-screen bg-[#222] flex items-center justify-center">
-        <p style={{ fontFamily: FONT, color: 'white', fontSize: 18 }}>No questions found</p>
-      </div>
+      <ScreenShell>
+        <p style={{ color: '#ece9e3', fontSize: 18 }}>No questions found</p>
+      </ScreenShell>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#222] overflow-hidden relative" style={{ minHeight: 1024 }}>
-      <div style={{ position: 'absolute', top: 38, left: 47 }}>
-        <SlantEgg size="sm" />
-      </div>
-
-      <Link
-        href="/signup/role"
-        style={{
-          position: 'absolute',
-          top: 151,
-          left: 178,
-          fontFamily: FONT,
-          fontSize: 32,
-          fontWeight: 100,
-          lineHeight: '100%',
-          color: 'white',
-          textDecoration: 'none',
-        }}
-      >
-        ←
-      </Link>
-
-      <h1
-        style={{
-          position: 'absolute',
-          top: 185,
-          left: 313,
-          width: 740,
-          fontFamily: FONT,
-          fontSize: 32,
-          fontWeight: 450,
-          lineHeight: '100%',
-          color: 'white',
-          margin: 0,
-        }}
-      >
-        Answer just {questions.length} questions to help us personalise your Arcxde experience.
-      </h1>
-
+    <CenteredLayout>
       {q && (
-        <div style={{ position: 'absolute', top: 303, left: 303, width: 733 }}>
-          <AssessmentQuestion
-            questionNumber={currentIndex + 1}
-            roleContext={currentRole}
-            question={q.text}
-            answers={q.options.map((opt, idx) => ({ id: String(idx), text: opt }))}
-            selectedAnswerId={answers[q.id]}
-            onAnswerSelect={handleSelect}
-          />
-        </div>
+        <AssessmentQuestion
+          questionNumber={currentIndex + 1}
+          roleContext={currentRole}
+          question={q.text}
+          answers={q.options.map((opt, idx) => ({ id: String(idx), text: opt }))}
+          selectedAnswerId={answers[q.id]}
+          onAnswerSelect={handleSelect}
+          currentQuestion={currentIndex + 1}
+          totalQuestions={questions.length}
+          onBack={handleBack}
+          showHint
+        />
       )}
 
-      <div
-        style={{
-          position: 'absolute',
-          top: 846,
-          left: 303,
-          width: 733,
-          display: 'flex',
-          justifyContent: 'center',
-        }}
-      >
-        <AssessmentProgress currentQuestion={currentIndex + 1} totalQuestions={questions.length} />
-      </div>
-
       {submitError && (
-        <p
-          style={{
-            position: 'absolute',
-            top: 780,
-            left: 303,
-            fontFamily: FONT,
-            fontSize: 14,
-            fontWeight: 300,
-            lineHeight: '100%',
-            color: '#ff6b6b',
-          }}
-        >
+        <p style={{ fontFamily: FONT, fontSize: 14, color: '#ff8a8a', margin: 0 }}>
           {submitError.message || 'Error submitting answers'}
         </p>
       )}
@@ -204,27 +183,11 @@ function OnboardingQuestionsContent() {
       <button
         disabled={!isAnswered || isSubmitting}
         onClick={handleContinue}
-        style={{
-          position: 'absolute',
-          top: 913,
-          left: 966,
-          width: 166,
-          height: 38,
-          borderRadius: 20,
-          border: '1px solid #6b6b6b',
-          background: isAnswered && !isSubmitting ? '#fff' : 'transparent',
-          color: isAnswered && !isSubmitting ? '#222' : '#6b6b6b',
-          fontFamily: FONT,
-          fontSize: 18,
-          fontWeight: 300,
-          lineHeight: '100%',
-          cursor: isAnswered && !isSubmitting ? 'pointer' : 'default',
-          transition: 'all 0.15s',
-        }}
+        style={continueBtnStyle(isAnswered && !isSubmitting)}
       >
-        {isSubmitting ? 'submitting...' : 'continue'}
+        {isSubmitting ? 'Submitting...' : 'Continue'}
       </button>
-    </div>
+    </CenteredLayout>
   );
 }
 
@@ -232,8 +195,11 @@ export default function OnboardingQuestionsPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#222] flex items-center justify-center">
-          <p style={{ fontFamily: FONT, color: 'white', fontSize: 18 }}>Loading...</p>
+        <div
+          className="flex min-h-screen items-center justify-center"
+          style={{ background: '#272727' }}
+        >
+          <p style={{ fontFamily: FONT, color: '#ece9e3', fontSize: 18 }}>Loading...</p>
         </div>
       }
     >

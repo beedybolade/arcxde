@@ -102,7 +102,6 @@ async function main(): Promise<void> {
         'AI is central to my workflow',
         'I help shape AI-enabled products or workflows',
       ],
-      correctAnswer: 'A',
       order: 1,
     },
     {
@@ -116,7 +115,6 @@ async function main(): Promise<void> {
         'Financial or regulated outcomes',
         'High-impact or sensitive decisions',
       ],
-      correctAnswer: 'A',
       order: 2,
     },
     {
@@ -130,7 +128,6 @@ async function main(): Promise<void> {
         'Health or sensitive personal data',
         'Mixed or multiple data types',
       ],
-      correctAnswer: 'A',
       order: 3,
     },
     {
@@ -145,7 +142,6 @@ async function main(): Promise<void> {
         'Building better AI-enabled products',
         'Career development',
       ],
-      correctAnswer: 'A',
       order: 4,
     },
   ];
@@ -162,7 +158,6 @@ async function main(): Promise<void> {
         'I build features that use AI/ML',
         'I architect AI-powered systems',
       ],
-      correctAnswer: 'A',
       order: 1,
     },
     {
@@ -176,7 +171,6 @@ async function main(): Promise<void> {
         'Cost and performance',
         'Ethical and responsible AI',
       ],
-      correctAnswer: 'A',
       order: 2,
     },
     {
@@ -190,7 +184,6 @@ async function main(): Promise<void> {
         'Evaluating AI model outputs',
         'AI security and safety',
       ],
-      correctAnswer: 'A',
       order: 3,
     },
   ];
@@ -207,7 +200,6 @@ async function main(): Promise<void> {
         'We are actively piloting AI initiatives',
         'AI is central to our strategy',
       ],
-      correctAnswer: 'A',
       order: 1,
     },
     {
@@ -221,7 +213,6 @@ async function main(): Promise<void> {
         'Competitive pressure',
         'Risk and compliance',
       ],
-      correctAnswer: 'A',
       order: 2,
     },
     {
@@ -235,7 +226,6 @@ async function main(): Promise<void> {
         'AI governance and strategy',
         'Keeping up with AI trends',
       ],
-      correctAnswer: 'A',
       order: 3,
     },
   ];
@@ -252,7 +242,6 @@ async function main(): Promise<void> {
         'I design AI-powered interfaces',
         'I prototype with AI-generated assets',
       ],
-      correctAnswer: 'A',
       order: 1,
     },
     {
@@ -266,7 +255,6 @@ async function main(): Promise<void> {
         'Measuring user experience',
         'Integrating AI feedback loops',
       ],
-      correctAnswer: 'A',
       order: 2,
     },
     {
@@ -280,7 +268,6 @@ async function main(): Promise<void> {
         'Evaluating AI-powered UX',
         'Accessibility in AI products',
       ],
-      correctAnswer: 'A',
       order: 3,
     },
   ];
@@ -297,7 +284,6 @@ async function main(): Promise<void> {
         'AI is integrated into our workflows',
         'We build AI‑enabled products',
       ],
-      correctAnswer: 'A',
       order: 1,
     },
     {
@@ -311,7 +297,6 @@ async function main(): Promise<void> {
         'Measuring productivity gains',
         'Ethical and legal risks',
       ],
-      correctAnswer: 'A',
       order: 2,
     },
     {
@@ -325,7 +310,6 @@ async function main(): Promise<void> {
         'Creating AI policies and guidelines',
         'Budgeting for AI tools',
       ],
-      correctAnswer: 'A',
       order: 3,
     },
   ];

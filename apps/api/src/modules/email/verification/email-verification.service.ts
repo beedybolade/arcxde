@@ -212,9 +212,8 @@ export class EmailVerificationService {
       },
     });
 
-    // 4. Construct the full redirect link pointing directly to your Next.js frontend route
     const frontendUrl =
-      process.env.FRONTEND_VERIFY_URL || 'http://localhost:3000/signup/verification';
+      process.env.FRONTEND_VERIFY_URL ?? 'http://localhost:3000/signup/verification';
     const magicLinkUrl = `${frontendUrl}?token=${magicToken}`;
 
     // 5. Dispatch dynamic layouts depending on the flow purpose
@@ -282,9 +281,8 @@ export class EmailVerificationService {
         }),
       ]);
 
-      // 3. Assemble the test URL link destination
       const frontendUrl =
-        process.env.FRONTEND_VERIFY_URL || 'http://localhost:3000/signup/verification';
+        process.env.FRONTEND_VERIFY_URL ?? 'http://localhost:3000/signup/verification';
       const verificationLink = `${frontendUrl}?token=${registrationToken}`;
 
       // 4. Dispatch via the base EmailService instance

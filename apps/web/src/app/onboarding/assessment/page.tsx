@@ -1,11 +1,29 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { SlantEgg } from '@/components/slant-egg';
 import { AssessmentQuestion } from '@/components/assessment-question';
-import { AssessmentProgress } from '@/components/assessment-progress';
+import { Chip } from '@/components/ui/chip';
+import { Countdown } from '@/components/ui/countdown';
+import { ClipboardIcon } from 'lucide-react';
+import { CenteredLayout } from '@/components/layouts/centered-layout';
 
-const FONT = "'Suisse Int\\'l', system-ui, sans-serif";
+const FONT = "'Geist', system-ui, sans-serif";
+
+const continueBtnStyle = (enabled: boolean): React.CSSProperties => ({
+  width: '100%',
+  padding: '22px',
+  borderRadius: 18,
+  border: 'none',
+  cursor: enabled ? 'pointer' : 'default',
+  fontFamily: FONT,
+  fontSize: 18,
+  fontWeight: 500,
+  color: '#1a1917',
+  background: 'linear-gradient(180deg,#fbf8f1,#ece7db)',
+  boxShadow: '0 12px 30px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.7)',
+  opacity: enabled ? 1 : 0.82,
+  transition: 'opacity .15s ease',
+});
 
 interface Question {
   id: string;
@@ -238,42 +256,42 @@ export default function AssessmentPage() {
   const q = QUESTIONS[currentIndex];
   const isLast = currentIndex === QUESTIONS.length - 1;
   const isAnswered = !!answers[q.id];
+  const questionsLeft = QUESTIONS.length - currentIndex - 1;
 
   const handleSelect = (answerId: string) => setAnswers((prev) => ({ ...prev, [q.id]: answerId }));
 
   const handleContinue = () => {
     if (isLast) {
-      console.log('Assessment complete:', answers);
+      handleSubmit();
     } else {
       setCurrentIndex((i) => i + 1);
     }
   };
 
+  const handleSubmit = () => {
+    console.log('Assessment complete:', answers);
+    // router.push('/dashboard') or whatever comes next
+  };
+
   return (
-    <div className="min-h-screen bg-[#222] overflow-hidden relative" style={{ minHeight: 1024 }}>
-      {/* Small egg — top 38, left 47 */}
-      <div style={{ position: 'absolute', top: 38, left: 47 }}>
-        <SlantEgg size="sm" />
-      </div>
+    <CenteredLayout>
+      <div className="flex w-full max-w-235 flex-col gap-7.5">
+        <h1
+          className="text-6 font-medium leading-tight tracking-[-0.5px] text-[#ece9e3] md:text-[34px]"
+          style={{
+            fontFamily: FONT,
+            margin: 0,
+          }}
+        >
+          Article 4: AI Literacy
+        </h1>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Countdown initialSeconds={5 * 60} onElapse={handleSubmit} />
+          <Chip icon={<ClipboardIcon />}>
+            {questionsLeft} question{questionsLeft !== 1 ? 's' : ''} left
+          </Chip>
+        </div>
 
-      <h1
-        style={{
-          position: 'absolute',
-          top: 185,
-          left: 313,
-          width: 740,
-          fontFamily: FONT,
-          fontSize: 32,
-          fontWeight: 450,
-          lineHeight: '100%',
-          color: 'white',
-          margin: 0,
-        }}
-      >
-        Answer 20 questions about AI literacy to complete your assessment.
-      </h1>
-
-      <div style={{ position: 'absolute', top: 303, left: 303, width: 733 }}>
         <AssessmentQuestion
           questionNumber={currentIndex + 1}
           roleContext="AI Literacy"
@@ -281,45 +299,19 @@ export default function AssessmentPage() {
           answers={q.answers}
           selectedAnswerId={answers[q.id]}
           onAnswerSelect={handleSelect}
+          currentQuestion={currentIndex + 1}
+          totalQuestions={QUESTIONS.length}
+          showProgress
         />
-      </div>
 
-      <div
-        style={{
-          position: 'absolute',
-          top: 846,
-          left: 303,
-          width: 733,
-          display: 'flex',
-          justifyContent: 'center',
-        }}
-      >
-        <AssessmentProgress currentQuestion={currentIndex + 1} totalQuestions={QUESTIONS.length} />
+        <button
+          disabled={!isAnswered}
+          onClick={handleContinue}
+          style={continueBtnStyle(isAnswered)}
+        >
+          {isLast ? 'Finish' : 'Next Question'}
+        </button>
       </div>
-
-      <button
-        disabled={!isAnswered}
-        onClick={handleContinue}
-        style={{
-          position: 'absolute',
-          top: 913,
-          left: 966,
-          width: 166,
-          height: 38,
-          borderRadius: 20,
-          border: '1px solid #6b6b6b',
-          background: isAnswered ? '#fff' : 'transparent',
-          color: isAnswered ? '#222' : '#6b6b6b',
-          fontFamily: FONT,
-          fontSize: 18,
-          fontWeight: 300,
-          lineHeight: '100%',
-          cursor: isAnswered ? 'pointer' : 'default',
-          transition: 'all 0.15s',
-        }}
-      >
-        {isLast ? 'submit' : 'continue'}
-      </button>
-    </div>
+    </CenteredLayout>
   );
 }

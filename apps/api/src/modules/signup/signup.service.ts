@@ -1,12 +1,13 @@
-import { FinalizeRegistrationDto } from '@app/contracts';
-import { Injectable, BadRequestException } from '@nestjs/common';
 import * as argon2 from 'argon2';
 
-import { AuthService } from '../auth/auth.service';
+import { FinalizeRegistrationDto } from '@app/contracts';
+import { BadRequestException, Injectable } from '@nestjs/common';
+
+import type { NormalizedProfile } from '../auth/models/auth-registration.interface';
+import { AuthService } from '../auth/auth.service.js';
 import { IdentityResolver } from '../auth/identity/identity.resolver.js';
-import { NormalizedProfile } from '../auth/models/auth-registration.interface';
 import { EmailVerificationService } from '../email/verification/email-verification.service.js';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service.js';
 
 @Injectable()
 export class SignupService {
@@ -101,8 +102,7 @@ export class SignupService {
         },
       });
 
-      // Only throw an error if an EMAIL_PASSWORD track already exists and has a password
-      if (passwordIdentity && passwordIdentity.passwordHash) {
+      if (passwordIdentity?.passwordHash) {
         throw new BadRequestException('An account with this email address already exists.');
       }
     }
