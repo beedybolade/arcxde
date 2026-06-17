@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { SlantEgg } from '@/components/slant-egg';
 import { AssessmentQuestion } from '@/components/assessment-question';
 import { Chip } from '@/components/ui/chip';
 import { Countdown } from '@/components/ui/countdown';
 import { ClipboardIcon } from 'lucide-react';
+import { CenteredLayout } from '@/components/layouts/centered-layout';
 
 const FONT = "'Geist', system-ui, sans-serif";
 
@@ -274,27 +274,17 @@ export default function AssessmentPage() {
   };
 
   return (
-    <div
-      className="flex min-h-screen justify-center px-11 py-16"
-      style={{ background: '#1a1918', fontFamily: FONT }}
-    >
-      <div className="flex w-full max-w-[940px] flex-col gap-[30px]">
-        <SlantEgg size="sm" className="self-start" />
-
+    <CenteredLayout>
+      <div className="flex w-full max-w-235 flex-col gap-7.5">
         <h1
+          className="text-6 font-medium leading-tight tracking-[-0.5px] text-[#ece9e3] md:text-[34px]"
           style={{
             fontFamily: FONT,
-            fontSize: 34,
-            fontWeight: 500,
-            letterSpacing: '-0.5px',
-            lineHeight: 1.25,
-            color: '#ece9e3',
             margin: 0,
           }}
         >
-          Answer 20 questions about AI literacy to complete your assessment.
+          Article 4: AI Literacy
         </h1>
-
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Countdown initialSeconds={5 * 60} onElapse={handleSubmit} />
           <Chip icon={<ClipboardIcon />}>
@@ -322,6 +312,6 @@ export default function AssessmentPage() {
           {isLast ? 'Finish' : 'Next Question'}
         </button>
       </div>
-    </div>
+    </CenteredLayout>
   );
 }
