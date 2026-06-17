@@ -1,18 +1,30 @@
 import * as crypto from 'crypto';
-
 import {
   Injectable,
   BadRequestException,
   UnauthorizedException,
   InternalServerErrorException,
 } from '@nestjs/common';
-
+import { JwtService } from '@nestjs/jwt'; // Added to issue access tokens on magic login success
 import { PrismaService } from '../../prisma/prisma.service';
 import { EmailService } from '../email.service';
 
+type UserLifecycleStatus =
+  | 'NEW_USER'
+  | 'PENDING_ONBOARDING'
+  | 'PENDING_REGISTRATION'
+  | 'EXISTING_USER';
+
+interface VerifyMagicLinkResult {
+  email: string;
+  registrationToken: string;
+  status: UserLifecycleStatus;
+  accessToken?: string; // Included to log returning users in seamlessly
+  user?: { id: string; email: string };
+}
+
 @Injectable()
 export class EmailVerificationService {
-  // Configurable rate limit and attempt thresholds
   private readonly maxVerificationAttempts = parseInt(
     process.env.MAX_VERIFICATION_ATTEMPTS ?? '5',
     10,
@@ -22,39 +34,15 @@ export class EmailVerificationService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly emailService: EmailService,
+    private readonly jwtService: JwtService,
   ) {}
 
-  // Verifies the secure URL token string and transitions the user to an active onboarding session
-  async verifyMagicLink(token: string): Promise<{
-    email: string;
-    registrationToken: string;
-    status: 'NEW_USER' | 'PENDING_ONBOARDING' | 'PENDING_REGISTRATION' | 'EXISTING_USER';
-  }> {
-    // 1. Fetch the metadata directly via the unique secure token string
-    const record = await this.prisma.verificationToken.findUnique({
-      where: { token },
-    });
-
-    // Security Fallback: If token isn't found, it might be an invalid token or a brute-force guess attempt
-    if (!record) {
-      throw new BadRequestException('Invalid or expired verification link.');
-    }
-
-    // 2. Brute Force Protection Validation Checks
-    if (record.attempts >= this.maxVerificationAttempts) {
-      await this.prisma.verificationToken.delete({ where: { id: record.id } });
-      throw new BadRequestException(
-        'This verification link has been locked due to too many failed attempts. Please request a new link.',
-      );
-    }
-
-    // 3. Expiry Validation Gate
-    if (new Date() > record.expiresAt) {
-      await this.prisma.verificationToken.delete({ where: { id: record.id } });
-      throw new BadRequestException(
-        'This verification link has expired. Please request a new one.',
-      );
-    }
+  /**
+   * Orchestrates the validation, status resolution, and atomic database tracking
+   * when a user clicks their email magic link.
+   */
+  async verifyMagicLink(token: string): Promise<VerifyMagicLinkResult> {
+    const record = await this.validateLinkTokenOrThrow(token);
 
     const user = await this.prisma.user.findUnique({
       where: { id: record.userId },
@@ -64,102 +52,45 @@ export class EmailVerificationService {
       throw new BadRequestException('User record associated with this link no longer exists.');
     }
 
-    // LOOKUP: Check if they actually have a local credential identity record
-    const hasEmailIdentity = await this.prisma.identity.findFirst({
-      where: {
-        userId: user.id,
-        provider: 'EMAIL_PASSWORD',
-      },
-    });
-
-    // 🌲 Determine lifecycle status state matrix
-    let status: 'NEW_USER' | 'PENDING_ONBOARDING' | 'PENDING_REGISTRATION' | 'EXISTING_USER' =
-      'NEW_USER';
-
-    if (hasEmailIdentity) {
-      // 💡 TRACK A: Traditional credentials user
-      if (user.onboardingCompleted) {
-        status = 'EXISTING_USER';
-      } else {
-        status = 'PENDING_ONBOARDING';
-      }
-    } else {
-      // 💡 TRACK B: No email identity exists yet
-      if (user.registrationCompleted) {
-        // 🚀 THIS IS YOU: They exist via Google, profile is already built!
-        // They are coming through to strictly LINK their account with a password.
-        status = 'PENDING_REGISTRATION';
-      } else {
-        // A completely fresh sign-up who has never completed registration or OAuth
-        status = 'NEW_USER';
-      }
-    }
-
-    // 💡 If it gets past these checks, the link is valid!
+    const status = await this.determineUserStatus(user);
     const formattedEmail = record.email.trim().toLowerCase();
-    const sessionExpiry = new Date(Date.now() + 30 * 60 * 1000); // 30-minute workspace onboarding window
-
-    // Generate the unique secure registration voucher token
     const registrationToken = crypto.randomBytes(32).toString('hex');
 
+    const shouldCreateSession = status === 'EXISTING_USER';
+
     try {
-      await this.prisma.$transaction(async (tx) => {
-        // 1. Promote the actual user record to email_verified: true
-        await tx.user.update({
-          where: { id: record.userId },
-          data: {
-            emailVerified: true,
-            emailVerifiedAt: new Date(),
-          },
-        });
-
-        // LAZY-CREATE EMAIL IDENTITY: Link the local track if it's missing
-        const existingEmailIdentity = await tx.identity.findFirst({
-          where: {
-            userId: record.userId,
-            provider: 'EMAIL_PASSWORD',
-          },
-        });
-
-        if (!existingEmailIdentity) {
-          await tx.identity.create({
-            data: {
-              userId: record.userId,
-              provider: 'EMAIL_PASSWORD',
-              providerId: formattedEmail, // Storing email as the provider unique identifier
-              providerEmail: formattedEmail, // Store the email for reference, even if it's redundant with providerId
-            },
-          });
-        }
-
-        // 2. Wipe out ANY existing registration sessions for this email address.
-        // This clears out stale unique tokens completely and guarantees no constraint conflicts.
-        await tx.emailVerificationSession.deleteMany({
-          where: { email: formattedEmail },
-        });
-
-        // 3. Freshly create the verified onboarding session state.
-        // Since step 2 guaranteed a clean slate, this will NEVER throw a unique constraint error on email.
-        await tx.emailVerificationSession.create({
-          data: {
-            email: formattedEmail,
-            verified: true,
-            registrationToken: registrationToken,
-            expiresAt: sessionExpiry,
-          },
-        });
-
-        // 4. Prune the consumed verification token immediately so it can never be re-played
-        await tx.verificationToken.delete({
-          where: { id: record.id },
-        });
+      // Execute the transaction and retrieve the secure raw token string if generated
+      const { rawSessionToken } = await this.executeVerificationTransaction({
+        verificationRecordId: record.id,
+        userId: user.id,
+        email: formattedEmail,
+        registrationToken,
+        shouldCreateSession,
       });
 
-      // Return the secure temporary registration token to the controller layer
-      return { email: formattedEmail, registrationToken, status };
-    } catch {
-      // If the token was valid but the database transaction choked due to a dead-lock or concurrency fail,
-      // log an attempt against the token to protect the route from endless spamming.
+      let postAuthPayload = {};
+      if (status === 'EXISTING_USER' && rawSessionToken) {
+        // 🔒 The record safely exists in the DB under a SHA-256 footprint.
+        // Mint the JWT token now. You can embed the raw token or its hash depending on your strategy setup:
+        const accessToken = this.jwtService.sign({
+          sub: user.id,
+          sid: this.hashToken(rawSessionToken), // Or pass the raw string if that's what your guard uses to extract and re-hash!
+        });
+
+        postAuthPayload = {
+          accessToken,
+          user: { id: user.id, email: user.email },
+        };
+      }
+
+      return {
+        email: formattedEmail,
+        registrationToken,
+        status,
+        ...postAuthPayload,
+      };
+    } catch (error) {
+      console.error('[VERIFICATION_FAILURE] Real underlying error:', error);
       await this.prisma.verificationToken.update({
         where: { id: record.id },
         data: { attempts: { increment: 1 } },
@@ -169,6 +100,9 @@ export class EmailVerificationService {
     }
   }
 
+  /**
+   * Dispatches the initial magic link verification email with rate limiting
+   */
   async sendMagicLinkEmail(
     userId: string,
     email: string,
@@ -176,7 +110,7 @@ export class EmailVerificationService {
   ): Promise<void> {
     const formattedEmail = email.trim().toLowerCase();
 
-    //  Production Rate-Limit Check: Max links per hour
+    // Verify rolling hourly rate-limit bounds
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
     const recentLinksCount = await this.prisma.verificationToken.count({
       where: {
@@ -189,34 +123,20 @@ export class EmailVerificationService {
       throw new BadRequestException('Too many verification requests. Please try again in an hour.');
     }
 
-    // 1. Generate a 32-byte secure hex string token
     const magicToken = crypto.randomBytes(32).toString('hex');
-
-    // 2. Set token lifespan (e.g., 30 minutes)
     const tokenLifespanMinutes = 30;
     const expiresAt = new Date(Date.now() + tokenLifespanMinutes * 60 * 1000);
 
-    // 3. Atomically upsert the verification token linked to this user ID
-    // This cleans up any old token if they click "resend" multiple times
     await this.prisma.verificationToken.upsert({
       where: { userId },
-      update: {
-        token: magicToken,
-        expiresAt,
-      },
-      create: {
-        userId,
-        email: formattedEmail,
-        token: magicToken,
-        expiresAt,
-      },
+      update: { token: magicToken, expiresAt },
+      create: { userId, email: formattedEmail, token: magicToken, expiresAt },
     });
 
     const frontendUrl =
       process.env.FRONTEND_VERIFY_URL ?? 'http://localhost:3000/signup/verification';
     const magicLinkUrl = `${frontendUrl}?token=${magicToken}`;
 
-    // 5. Dispatch dynamic layouts depending on the flow purpose
     if (purpose === 'LOGIN') {
       await this.emailService.sendLoginLink(formattedEmail, magicLinkUrl);
     } else {
@@ -224,7 +144,9 @@ export class EmailVerificationService {
     }
   }
 
-  // Helper method: if someone hits your validation with a bad token structure but you want to track attempts manually via an email fallback
+  /**
+   * Increments attempt counts if verification crashes manually out of bounds
+   */
   async registerFailedAttempt(email: string): Promise<void> {
     const formattedEmail = email.trim().toLowerCase();
     await this.prisma.verificationToken.updateMany({
@@ -233,14 +155,17 @@ export class EmailVerificationService {
     });
   }
 
-  // Validates that the user has an active verified session for their email before allowing them to proceed with registration
+  /**
+   * Confirms the onboarding registration voucher exists and is within its validation timeframe
+   */
   async validateActiveSessionOrThrow(registrationToken: string): Promise<{ email: string }> {
     const session = await this.prisma.emailVerificationSession.findFirst({
       where: { registrationToken },
     });
+
     const sessionExpireTime = session?.expiresAt.getTime() ?? 0;
     const currentServerTime = new Date().getTime();
-    // If no session, or session isn't verified, or session is expired, block the registration flow
+
     if (!session || !session.verified || currentServerTime > sessionExpireTime) {
       throw new UnauthorizedException(
         'Email verification required or onboarding session has expired.',
@@ -249,6 +174,9 @@ export class EmailVerificationService {
     return { email: session.email };
   }
 
+  /**
+   * Clears old user validation sessions upon final persistence creation
+   */
   async consumeSession(email: string): Promise<void> {
     await this.prisma.emailVerificationSession.deleteMany({
       where: { email: email.trim().toLowerCase() },
@@ -256,18 +184,14 @@ export class EmailVerificationService {
   }
 
   /**
-   * 💡 Test runner method that handles the database transaction,
-   * link assembly, and hands it off to EmailService for dispatch.
+   * Bypasses strict tracking metrics to pipe automated verification tests
    */
   async sendTestVerificationEmail(toEmail: string): Promise<{ registrationToken: string }> {
     const formattedEmail = toEmail.trim().toLowerCase();
-
-    // 1. Generate token and TTL configuration bypassing hourly rate-limit counters
     const registrationToken = crypto.randomBytes(32).toString('hex');
     const codeTTL = this.codeTTL;
 
     try {
-      // 2. Clear out old instances and save the test token atomically
       await this.prisma.$transaction([
         this.prisma.verificationToken.deleteMany({ where: { email: formattedEmail } }),
         this.prisma.verificationToken.create({
@@ -276,7 +200,7 @@ export class EmailVerificationService {
             token: registrationToken,
             attempts: 0,
             expiresAt: new Date(Date.now() + codeTTL * 60 * 1000),
-            userId: `test-user-${registrationToken}`, // Link the token to a pseudo-user for testing
+            userId: `test-user-${registrationToken}`,
           },
         }),
       ]);
@@ -285,7 +209,6 @@ export class EmailVerificationService {
         process.env.FRONTEND_VERIFY_URL ?? 'http://localhost:3000/signup/verification';
       const verificationLink = `${frontendUrl}?token=${registrationToken}`;
 
-      // 4. Dispatch via the base EmailService instance
       await this.emailService.sendVerificationLink(formattedEmail, verificationLink);
       return { registrationToken };
     } catch (error: unknown) {
@@ -293,5 +216,139 @@ export class EmailVerificationService {
         `Failed to execute verification test pipeline inside verification service: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
+  }
+
+  // -------------------------------------------------------------------------
+  // PRIVATE CONTEXT SOLVER ISOLATED HELPERS
+  // -------------------------------------------------------------------------
+
+  /**
+   * Extracts token record metadata and handles security guard conditions (abuse tracking/lifespan)
+   */
+  private async validateLinkTokenOrThrow(token: string) {
+    const record = await this.prisma.verificationToken.findUnique({
+      where: { token },
+    });
+
+    if (!record) {
+      throw new BadRequestException('Invalid or expired verification link.');
+    }
+
+    if (record.attempts >= this.maxVerificationAttempts) {
+      await this.prisma.verificationToken.delete({ where: { id: record.id } });
+      throw new BadRequestException(
+        'This verification link has been locked due to too many failed attempts. Please request a new link.',
+      );
+    }
+
+    if (new Date() > record.expiresAt) {
+      await this.prisma.verificationToken.delete({ where: { id: record.id } });
+      throw new BadRequestException(
+        'This verification link has expired. Please request a new one.',
+      );
+    }
+
+    return record;
+  }
+
+  /**
+   * Inspects credentials maps to place the routing target into the app lifecycle
+   */
+  private async determineUserStatus(user: {
+    id: string;
+    onboardingCompleted: boolean;
+    registrationCompleted: boolean;
+  }): Promise<UserLifecycleStatus> {
+    const hasEmailIdentity = await this.prisma.identity.findFirst({
+      where: {
+        userId: user.id,
+        provider: 'EMAIL_PASSWORD',
+      },
+    });
+
+    if (hasEmailIdentity) {
+      return user.onboardingCompleted ? 'EXISTING_USER' : 'PENDING_ONBOARDING';
+    }
+
+    return user.registrationCompleted ? 'PENDING_REGISTRATION' : 'NEW_USER';
+  }
+
+  /**
+   * Executes atomic database record manipulations inside an isolated execution container
+   */
+  private async executeVerificationTransaction(params: {
+    verificationRecordId: string;
+    userId: string;
+    email: string;
+    registrationToken: string;
+    shouldCreateSession: boolean; //  Pass a boolean flag instead of a pre-computed ID string
+  }): Promise<{ rawSessionToken: string | null }> {
+    const sessionExpiry = new Date(Date.now() + 30 * 60 * 1000); // 30-minute window
+    let rawSessionToken: string | null = null;
+
+    await this.prisma.$transaction(async (tx) => {
+      // 1. Mark user verification metrics
+      await tx.user.update({
+        where: { id: params.userId },
+        data: { emailVerified: true, emailVerifiedAt: new Date() },
+      });
+
+      // 2. Handle missing identity tracking entries (lazy-create path)
+      const existingIdentity = await tx.identity.findFirst({
+        where: { userId: params.userId, provider: 'EMAIL_PASSWORD' },
+      });
+
+      if (!existingIdentity) {
+        await tx.identity.create({
+          data: {
+            userId: params.userId,
+            provider: 'EMAIL_PASSWORD',
+            providerId: params.email,
+            providerEmail: params.email,
+          },
+        });
+      }
+
+      // 3. Reset temporary onboarding registration tokens
+      await tx.emailVerificationSession.deleteMany({
+        where: { email: params.email },
+      });
+
+      await tx.emailVerificationSession.create({
+        data: {
+          email: params.email,
+          verified: true,
+          registrationToken: params.registrationToken,
+          expiresAt: sessionExpiry,
+        },
+      });
+
+      // 4. GENERATE AND PERSIST TRUE AUTH SESSION IF EXISTING USER
+      if (params.shouldCreateSession) {
+        // Generate a cryptographically secure raw token string
+        rawSessionToken = crypto.randomBytes(32).toString('hex');
+        const hashed = this.hashToken(rawSessionToken);
+
+        await tx.session.create({
+          data: {
+            tokenHash: hashed,
+            userId: params.userId,
+            expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7), // Valid for 7 days
+          },
+        });
+      }
+
+      // 5. Consume verification token to prevent reuse loops
+      await tx.verificationToken.delete({
+        where: { id: params.verificationRecordId },
+      });
+    });
+
+    // Return the unhashed raw token back up so it can be passed to the JWT or response
+    return { rawSessionToken };
+  }
+
+  private hashToken(token: string): string {
+    return crypto.createHash('sha256').update(token).digest('hex');
   }
 }

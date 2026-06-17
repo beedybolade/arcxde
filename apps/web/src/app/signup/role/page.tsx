@@ -51,6 +51,7 @@ const ROLES = [
 
 function AuthCallbackHandler() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const setUser = useUserStore((s) => s.setUser);
 
   useEffect(() => {
@@ -64,8 +65,14 @@ function AuthCallbackHandler() {
       } catch {
         // ignore decode errors
       }
+      // Store token as cookie and remove from URL so it can't be re-used on back nav
+      const secure = process.env.NODE_ENV === 'production';
+      document.cookie = `access_token=${accessToken}; path=/; secure=${secure}; samesite=strict; max-age=${60 * 60 * 24 * 7}`;
+      const cleanUrl = new URL(window.location.href);
+      cleanUrl.searchParams.delete('accessToken');
+      router.replace(cleanUrl.pathname + cleanUrl.search);
     }
-  }, [searchParams, setUser]);
+  }, [searchParams, setUser, router]);
 
   return null;
 }

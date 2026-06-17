@@ -42,6 +42,7 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto.js';
 import { ResetPasswordDto } from './dto/reset-password.dto.js';
 import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
 import type { NormalizedProfile } from './models/auth-registration.interface.js';
+import { JwtService } from '@nestjs/jwt';
 
 interface TokenResponse {
   accessToken: string;
@@ -52,9 +53,10 @@ interface TokenResponse {
 @Controller({ path: 'auth', version: '1' })
 export class AuthController {
   constructor(
-    private readonly service: AuthService,
+    private readonly authService: AuthService,
     private readonly emailVerificationService: EmailVerificationService,
     private readonly emailService: EmailService,
+    private readonly jwtService: JwtService,
   ) {}
 
   // --------------- GOOGLE OAUTH FLOWS --------------- //
@@ -79,7 +81,8 @@ export class AuthController {
       // req.user is populated by Passport safely regardless of the underlying driver
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
       const profile = req.user as NormalizedProfile;
-      const { tokens, isNewUser, user } = await this.service.registerOrLoginWithProvider(profile);
+      const { tokens, isNewUser, user } =
+        await this.authService.registerOrLoginWithProvider(profile);
 
       // BAKE THE REFRESH TOKEN INTO A HIGH-SECURITY COOKIE
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
@@ -91,16 +94,25 @@ export class AuthController {
         path: '/api/v1/auth/refresh', // Sent only to the token rotation route
       });
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+      res.cookie('access_token', tokens.accessToken, {
+        httpOnly: false, // Set to false IF your client-side React code needs to read it directly, or true if only middleware/API needs it
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 15 * 60 * 1000, // 15 Minutes matching your access token TTL
+        path: '/', // Crucial: Must be root path so Next.js middleware can read it on any route
+      });
+
       const baseUrl =
         isNewUser || !user?.onboardingCompleted
           ? process.env.FRONTEND_ONBOARDING_URL
           : process.env.FRONTEND_DASHBOARD_URL;
 
-      const finalRedirectUrl = `${baseUrl}?accessToken=${tokens.accessToken}`;
-
+      // Ensure fallback if environment variables lack trailing slashes
+      const destinationUrl = baseUrl || 'http://localhost:3000/dashboard';
       //Redirect the user to the appropriate frontend URL with their session tokens in query params; frontend will handle storing tokens securely and redirecting to the right place
       // Will direct to dashboard if existing user, or onboarding flow if new user, Tokens are included in query params for the frontend to capture and store securely (e.g. HttpOnly cookies or secure storage).
-      res.redirect(finalRedirectUrl, 302);
+      res.redirect(destinationUrl, 302);
       return;
     } catch (error: unknown) {
       // Direct print to screen if something else breaks inside the service loop
@@ -124,36 +136,43 @@ export class AuthController {
     @Req() req: FastifyRequest & { user?: unknown },
     @Res() res: FastifyReply,
   ): Promise<void> {
-    try {
-      // Extract the session ID attached by JwtStrategy
-      const sessionId = (req.user as { sessionId?: string }).sessionId;
+    const accessToken = req.cookies.access_token;
 
-      if (!sessionId) {
-        throw new Error('No active session token identifier found in request.');
+    try {
+      if (accessToken) {
+        // Decode the access token to capture the session ID (sid)
+        // If you don't have jwtService injected, you can use standard jwt.decode(accessToken)
+        const decoded: { sid?: string } = this.jwtService.decode(accessToken);
+
+        if (decoded?.sid) {
+          // Route it to a service function that handles the session table deletion
+          await this.authService.clearSessionBySessionID(decoded.sid);
+        }
+      } else {
+        console.warn('[AuthController] No access token found in cookies.');
       }
 
-      // 1. Terminate the database session record
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      await this.service.clearSession(sessionId);
+      const isProd = process.env.NODE_ENV === 'production';
 
-      // 2. If you are using HTTP-only cookies for refresh tokens, clear them here:
-      // res.clearCookie('refreshToken', { ...cookieOptions });
+      // Clear both cookies via headers
+      res.clearCookie('refresh_token', {
+        httpOnly: true,
+        secure: isProd,
+        sameSite: 'strict',
+        path: '/api/v1/auth/refresh',
+      });
 
-      // 3. Express response confirmation
-      res.status(200).send({
-        success: true,
-        message: 'Logged out successfully. Token session has been revoked.',
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        sessionId,
+      res.clearCookie('access_token', {
+        httpOnly: false,
+        secure: isProd,
+        sameSite: 'lax',
+        path: '/',
       });
-      return;
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
-      res.status(400).send({
-        error: 'Logout Error',
-        message,
-      });
-      return;
+
+      res.status(200).send({ success: true });
+    } catch (error) {
+      console.error('[AuthController] Logout exception:', error);
+      res.status(500).send({ error: 'Logout failed' });
     }
   }
 
@@ -164,7 +183,7 @@ export class AuthController {
   async refreshSession(
     @ZodBody(tokenRefreshSchema) body: TokenRefreshBody,
   ): Promise<{ data: TokenResponse }> {
-    return { data: await this.service.refreshSession(body.refreshToken) };
+    return { data: await this.authService.refreshSession(body.refreshToken) };
   }
 
   @Post('test-verification-email')
@@ -190,7 +209,7 @@ export class AuthController {
   @HttpCode(200)
   @ApiResponse({ status: 200, description: 'Password reset email sent if account exists.' })
   async forgotPassword(@Body() body: ForgotPasswordDto): Promise<{ message: string }> {
-    const token = await this.service.generatePasswordResetToken(body.email);
+    const token = await this.authService.generatePasswordResetToken(body.email);
     if (token) {
       await this.emailService.sendPasswordResetEmail(body.email, token).catch(() => {
         // Log but don't fail the request
@@ -207,13 +226,30 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Password successfully reset.' })
   @ApiResponse({ status: 401, description: 'Invalid or expired token.' })
   async resetPassword(@Body() body: ResetPasswordDto): Promise<{ message: string }> {
-    const success = await this.service.resetPassword(body.token, body.newPassword);
+    const success = await this.authService.resetPassword(body.token, body.newPassword);
     if (!success) {
       throw new UnauthorizedException('Invalid or expired reset token');
     }
     return {
       message:
         'Your password has been successfully updated. You can now log in with your new password.',
+    };
+  }
+
+  @Get('me')
+  getMe(@Req() req: FastifyRequest) {
+    const accessToken = req.cookies.access_token;
+
+    if (!accessToken) {
+      throw new UnauthorizedException('No session cookie present');
+    }
+
+    // Decode the token using your injected JwtService
+    const decoded: { sub: string } = this.jwtService.decode(accessToken);
+
+    // 'sub' contains your user ID string (e.g. usr_f22db73a...)
+    return {
+      userId: decoded.sub,
     };
   }
 }

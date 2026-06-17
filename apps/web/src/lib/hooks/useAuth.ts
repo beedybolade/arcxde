@@ -46,13 +46,22 @@ export const useVerifySignupToken = () => {
   });
 };
 export const useLoginWithEmailAndPassword = () => {
+  // Pull your auth store's direct state setter engine
   const setUser = useUserStore((s) => s.setUser);
 
   return useMutation({
     mutationFn: (data: { email: string; password: string }) =>
       api.post<LoginResponse>('/auth/login', data),
     onSuccess: (response) => {
-      setUser(response.data.user.id, response.data.accessToken);
+      const { accessToken, user } = response.data;
+
+      // 1. DROP ROUTE GUARD COOKIE FOR THE NEXT.JS MIDDLEWARE
+      document.cookie = `access_token=${accessToken}; path=/; secure=${
+        process.env.NODE_ENV === 'production' ? 'true' : 'false'
+      }; samesite=strict`;
+
+      // 2.  HYDRATE ZUSTAND AUTH STORE
+      setUser(user.id, accessToken);
     },
   });
 };
@@ -157,13 +166,46 @@ export const useGoogleAuth = () => {
   };
 };
 
-export const useLogout = () => {
-  const logout = useUserStore((s) => s.logout);
+/**
+ * Unified client-side session revocation worker
+ */
+export async function logout(): Promise<boolean> {
+  try {
+    // 1. Pull the bearer token — check Zustand store first (Google OAuth, magic link),
+    // then fall back to localStorage (legacy email/password login)
+    const storeToken = useUserStore.getState().token;
+    const token = storeToken || localStorage.getItem('access_token');
 
-  return useMutation({
-    mutationFn: () => api.post('/auth/logout'),
-    onSuccess: () => {
-      logout();
-    },
-  });
-};
+    if (token) {
+      // 2. Alert the NestJS backend to revoke the sessionId record
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/auth/logout`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        // CRITICAL: Tells the browser to include cookies (access_token/refresh_token)
+        // in this cross-origin request so NestJS knows whose session to destroy.
+        credentials: 'include',
+        body: JSON.stringify({}),
+      });
+    }
+  } catch (err) {
+    // Fail silently on the network layer so the user isn't trapped in a broken UI loop
+    console.error('[AUTH_CLIENT] Failed to notify backend of session teardown:', err);
+  } finally {
+    // If you use cookies for route guards or session context, clear them here:
+    document.cookie = 'access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+
+    // We update only the identity keys. Zustand automatically syncs this to disk.
+    useUserStore.setState({
+      userId: null,
+      token: null,
+      // selectedRole and onboardingCompleted remain completely untouched here!
+    });
+
+    // 4. Force a hard break out of client-side cache space to the authorization gateway
+    window.location.href = '/signup/individual';
+  }
+  return true;
+}

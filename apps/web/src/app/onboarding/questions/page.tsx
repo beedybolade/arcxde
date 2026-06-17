@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AssessmentQuestion } from '@/components/assessment-question';
@@ -52,6 +52,29 @@ function OnboardingQuestionsContent() {
   const selectedRole = useUserStore((s) => s.selectedRole);
   const hasHydrated = useUserStore((s) => s.hasHydrated);
   const currentRole = role || selectedRole;
+
+  useEffect(() => {
+    // 🛠️ If the store doesn't have a userId yet, ask the backend who owns this cookie
+    if (hasHydrated && !userId) {
+      fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/auth/me`, {
+        method: 'GET',
+        credentials: 'include', // 🚀 Crucial: brings the access_token along
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error('Session invalid');
+          return res.json();
+        })
+        .then((data) => {
+          // Update Zustand store memory layer with the actual user profile info
+          useUserStore.setState({ userId: data.userId });
+        })
+        .catch((err) => {
+          console.error('[AUTH] Failed to fetch session info:', err);
+          // Fallback: send them back to signup if their cookie is bad or missing
+          router.push('/signup/individual');
+        });
+    }
+  }, [userId, hasHydrated, router]);
 
   const {
     data: questionsResponse,

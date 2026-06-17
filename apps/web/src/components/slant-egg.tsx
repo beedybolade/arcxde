@@ -13,7 +13,7 @@ export interface SlantEggProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 export const SlantEgg = forwardRef<HTMLDivElement, SlantEggProps>(
-  ({ size = 'lg', className, style, ...props }, ref) => {
+  ({ size = 'lg', className, style, showText: _showText, ...props }, ref) => {
     const width = size === 'sm' ? 62 : 228;
     const height = (width / 250) * 332;
 
