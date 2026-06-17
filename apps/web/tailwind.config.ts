@@ -8,7 +8,7 @@ const config: Config = {
         sans: ['var(--font-geist)', 'system-ui', 'sans-serif'],
       },
       colors: {
-        // Arcxde palette
+        // Agxnda palette
         ink: {
           900: '#1a1918', // page background / dark text on cream
           800: '#1f1e1c',

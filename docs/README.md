@@ -1,4 +1,4 @@
-# arcxde — Documentation
+# agxnda — Documentation
 
 This is the **single source of truth** for the system. Read this before code.
 

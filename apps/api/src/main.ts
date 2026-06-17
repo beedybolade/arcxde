@@ -108,7 +108,7 @@ async function bootstrap(): Promise<void> {
   // ---- 3. Swagger — must be set up BEFORE compress ----
   if (config.get('ALLOW_SWAGGER') === true) {
     const swagger = new DocumentBuilder()
-      .setTitle('arcxde API')
+      .setTitle('agxnda API')
       .setDescription('See docs/conventions/api-design.md for the contract.')
       .setVersion('1.0')
       .addBearerAuth()

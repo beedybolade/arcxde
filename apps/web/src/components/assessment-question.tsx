@@ -115,14 +115,9 @@ export const AssessmentQuestion = forwardRef<HTMLDivElement, AssessmentQuestionP
 
         {/* Numbered question */}
         <h2
+          className="text-[18px] md:text-[32px] font-medium leading-tight text-[#e6e3dd] mt-0 mb-6"
           style={{
             fontFamily: FONT,
-            fontSize: 26,
-            fontWeight: 500,
-            lineHeight: 1.25,
-            color: '#e6e3dd',
-            marginTop: 0,
-            marginBottom: 24,
           }}
         >
           {questionNumber}. {question}
@@ -183,7 +178,7 @@ export const AssessmentQuestion = forwardRef<HTMLDivElement, AssessmentQuestionP
               paddingTop: 32,
             }}
           >
-            Answer just {totalQuestions} questions to help us personalise your Arcxde experience.
+            Answer just {totalQuestions} questions to help us personalise your Agxnda experience.
           </p>
         )}
       </div>
