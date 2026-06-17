@@ -1,7 +1,5 @@
 'use client';
 
-const FONT = "'Geist', system-ui, sans-serif";
-
 interface BackButtonProps {
   onClick: () => void;
 }

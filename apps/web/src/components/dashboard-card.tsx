@@ -1,4 +1,5 @@
 import { forwardRef, HTMLAttributes } from 'react';
+import Image from 'next/image';
 import { cn } from '@/lib/cn';
 
 export type ContentType = 'podcast' | 'article' | 'video';
@@ -87,9 +88,7 @@ export const DashboardCard = forwardRef<HTMLDivElement, DashboardCardProps>(
         </p>
 
         {contentType && (
-          <img
-            src={ICON_SRC[contentType]}
-            alt={contentType}
+          <div
             style={{
               position: 'absolute',
               bottom: variant === 'course' ? 32 : 16,
@@ -100,7 +99,15 @@ export const DashboardCard = forwardRef<HTMLDivElement, DashboardCardProps>(
               height: 45,
               opacity: 0.8,
             }}
-          />
+          >
+            <Image
+              src={ICON_SRC[contentType]}
+              alt={contentType}
+              width={45}
+              height={45}
+              style={{ objectFit: 'contain' }}
+            />
+          </div>
         )}
       </div>
     );
