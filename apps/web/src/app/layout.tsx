@@ -16,16 +16,16 @@ import './globals.css';
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000'),
   title: {
-    default: 'arcxde',
-    template: '%s · arcxde',
+    default: 'agxnda',
+    template: '%s · agxnda',
   },
   description: 'A learning platform for teams who actually want to learn.',
-  applicationName: 'arcxde',
-  authors: [{ name: 'arcxde' }],
+  applicationName: 'agxnda',
+  authors: [{ name: 'agxnda' }],
   formatDetection: { telephone: false, email: false, address: false },
   openGraph: {
     type: 'website',
-    title: 'arcxde',
+    title: 'agxnda',
     description: 'A learning platform for teams who actually want to learn.',
   },
 };

@@ -1,6 +1,7 @@
 'use client';
 
-import { HTMLAttributes, useState } from 'react';
+import { HTMLAttributes } from 'react';
+import Image from 'next/image';
 import { cn } from '@/lib/cn';
 import { SlantEgg } from '@/components/slant-egg';
 import { logout } from '@/lib/hooks/useAuth';

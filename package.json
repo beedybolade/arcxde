@@ -2,7 +2,7 @@
   "name": "project-name",
   "version": "1.0.0",
   "private": true,
-  "description": "arcxde monorepo — see README.md and docs/",
+  "description": "agxnda monorepo — see README.md and docs/",
   "packageManager": "pnpm@9.15.0",
   "engines": {
     "node": ">=22.0.0",

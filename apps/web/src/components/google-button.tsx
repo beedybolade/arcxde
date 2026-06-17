@@ -43,7 +43,7 @@ export const GoogleButton = ({
       onClick={onClick}
       disabled={disabled || isLoading}
       style={{
-        display: 'flex',
+        display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
         gap: 14,
@@ -55,6 +55,7 @@ export const GoogleButton = ({
         cursor: disabled || isLoading ? 'default' : 'pointer',
         opacity: disabled || isLoading ? 0.7 : 1,
         transition: 'opacity 0.2s ease',
+        minWidth: 260,
       }}
     >
       <GoogleLogo />

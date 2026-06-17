@@ -2,12 +2,11 @@
 
 import { Suspense, useEffect } from 'react';
 import { useState } from 'react';
-import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { SlantEgg } from '@/components/slant-egg';
 import { AssessmentQuestion } from '@/components/assessment-question';
 import { useOnboardingQuestions, useSubmitOnboarding } from '@/lib/hooks/useOnboarding';
 import { useUserStore } from '@/store/user-store';
+import { CenteredLayout } from '@/components/layouts/centered-layout';
 
 const FONT = "'Geist', system-ui, sans-serif";
 
@@ -27,26 +26,10 @@ const continueBtnStyle = (enabled: boolean): React.CSSProperties => ({
   transition: 'opacity .15s ease',
 });
 
-const BackArrow = () => (
-  <svg
-    width="30"
-    height="30"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.6"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <line x1="19" y1="12" x2="5" y2="12" />
-    <polyline points="12 19 5 12 12 5" />
-  </svg>
-);
-
 const ScreenShell = ({ children }: { children: React.ReactNode }) => (
   <div
     className="flex min-h-screen items-center justify-center"
-    style={{ background: '#1a1918', fontFamily: FONT }}
+    style={{ background: '#272727', fontFamily: FONT }}
   >
     {children}
   </div>
@@ -108,7 +91,6 @@ function OnboardingQuestionsContent() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
-  // Wait for Zustand rehydrate before rendering content that needs persisted state
   if (!hasHydrated) {
     return (
       <ScreenShell>
@@ -127,8 +109,20 @@ function OnboardingQuestionsContent() {
     }
   };
 
+  const handleBack = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex((i) => i - 1);
+    } else {
+      router.push('/signup/role');
+    }
+  };
+
   const handleContinue = () => {
-    if (isLast && userId && currentRole) {
+    if (isLast) {
+      if (!userId || !currentRole) {
+        router.push('/signup/role');
+        return;
+      }
       const formattedAnswers = Object.entries(answers).map(([questionId, answerIdx]) => {
         const question = questions.find((q) => q.id === questionId);
         const selectedOption = question?.options[parseInt(answerIdx)] || answerIdx;
@@ -163,7 +157,12 @@ function OnboardingQuestionsContent() {
     );
   }
 
-  if (questionsError || !currentRole || !userId) {
+  if (!currentRole) {
+    router.push('/signup/role');
+    return null;
+  }
+
+  if (questionsError) {
     return (
       <ScreenShell>
         <p style={{ color: '#ff8a8a', fontSize: 18 }}>
@@ -182,64 +181,36 @@ function OnboardingQuestionsContent() {
   }
 
   return (
-    <div
-      className="flex min-h-screen justify-center px-11 py-16"
-      style={{ background: '#1a1918', fontFamily: FONT }}
-    >
-      <div className="flex w-full max-w-[940px] flex-col gap-[30px]">
-        <SlantEgg size="sm" className="self-start" />
+    <CenteredLayout>
+      {q && (
+        <AssessmentQuestion
+          questionNumber={currentIndex + 1}
+          roleContext={currentRole}
+          question={q.text}
+          answers={q.options.map((opt, idx) => ({ id: String(idx), text: opt }))}
+          selectedAnswerId={answers[q.id]}
+          onAnswerSelect={handleSelect}
+          currentQuestion={currentIndex + 1}
+          totalQuestions={questions.length}
+          onBack={handleBack}
+          showHint
+        />
+      )}
 
-        <div style={{ display: 'flex', gap: 26, alignItems: 'flex-start' }}>
-          <Link
-            href="/signup/role"
-            aria-label="Back"
-            style={{ marginTop: 8, color: '#ece9e3', display: 'flex', textDecoration: 'none' }}
-          >
-            <BackArrow />
-          </Link>
-          <h1
-            style={{
-              fontFamily: FONT,
-              fontSize: 34,
-              fontWeight: 500,
-              letterSpacing: '-0.5px',
-              lineHeight: 1.25,
-              color: '#ece9e3',
-              margin: 0,
-            }}
-          >
-            Answer just {questions.length} questions to help us personalise your Arcxde experience.
-          </h1>
-        </div>
+      {submitError && (
+        <p style={{ fontFamily: FONT, fontSize: 14, color: '#ff8a8a', margin: 0 }}>
+          {submitError.message || 'Error submitting answers'}
+        </p>
+      )}
 
-        {q && (
-          <AssessmentQuestion
-            questionNumber={currentIndex + 1}
-            roleContext={currentRole}
-            question={q.text}
-            answers={q.options.map((opt, idx) => ({ id: String(idx), text: opt }))}
-            selectedAnswerId={answers[q.id]}
-            onAnswerSelect={handleSelect}
-            currentQuestion={currentIndex + 1}
-            totalQuestions={questions.length}
-          />
-        )}
-
-        {submitError && (
-          <p style={{ fontFamily: FONT, fontSize: 14, color: '#ff8a8a', margin: 0 }}>
-            {submitError.message || 'Error submitting answers'}
-          </p>
-        )}
-
-        <button
-          disabled={!isAnswered || isSubmitting}
-          onClick={handleContinue}
-          style={continueBtnStyle(isAnswered && !isSubmitting)}
-        >
-          {isSubmitting ? 'Submitting...' : 'Continue'}
-        </button>
-      </div>
-    </div>
+      <button
+        disabled={!isAnswered || isSubmitting}
+        onClick={handleContinue}
+        style={continueBtnStyle(isAnswered && !isSubmitting)}
+      >
+        {isSubmitting ? 'Submitting...' : 'Continue'}
+      </button>
+    </CenteredLayout>
   );
 }
 
@@ -249,7 +220,7 @@ export default function OnboardingQuestionsPage() {
       fallback={
         <div
           className="flex min-h-screen items-center justify-center"
-          style={{ background: '#1a1918' }}
+          style={{ background: '#272727' }}
         >
           <p style={{ fontFamily: FONT, color: '#ece9e3', fontSize: 18 }}>Loading...</p>
         </div>

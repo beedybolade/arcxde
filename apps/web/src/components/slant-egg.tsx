@@ -4,11 +4,11 @@ import { cn } from '@/lib/cn';
 
 export interface SlantEggProps extends HTMLAttributes<HTMLDivElement> {
   /**
-   * lg — full branding lockup: arch outline with the Arcxde® wordmark inside.
+   * lg — full branding lockup: arch outline with the Agxnda® wordmark inside.
    * sm — small arch mark for the top-left corner (role / assessment / questions).
    */
   size?: 'sm' | 'lg';
-  /** Show the Arcxde® wordmark. Only meaningful for size="lg". */
+  /** Show the Agxnda® wordmark. Only meaningful for size="lg". */
   showText?: boolean;
 }
 
@@ -25,8 +25,8 @@ export const SlantEgg = forwardRef<HTMLDivElement, SlantEggProps>(
         {...props}
       >
         <Image
-          src="/arcxde-logo.svg"
-          alt="Arcxde logo"
+          src="/agxnda-logo.svg"
+          alt="Agxnda logo"
           fill
           style={{ objectFit: 'contain' }}
           priority

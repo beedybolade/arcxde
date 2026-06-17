@@ -1,8 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { SlantEgg } from '@/components/slant-egg';
 import { AssessmentQuestion } from '@/components/assessment-question';
+import { Chip } from '@/components/ui/chip';
+import { Countdown } from '@/components/ui/countdown';
+import { ClipboardIcon } from 'lucide-react';
+import { CenteredLayout } from '@/components/layouts/centered-layout';
 
 const FONT = "'Geist', system-ui, sans-serif";
 
@@ -253,38 +256,41 @@ export default function AssessmentPage() {
   const q = QUESTIONS[currentIndex];
   const isLast = currentIndex === QUESTIONS.length - 1;
   const isAnswered = !!answers[q.id];
+  const questionsLeft = QUESTIONS.length - currentIndex - 1;
 
   const handleSelect = (answerId: string) => setAnswers((prev) => ({ ...prev, [q.id]: answerId }));
 
   const handleContinue = () => {
     if (isLast) {
-      console.log('Assessment complete:', answers);
+      handleSubmit();
     } else {
       setCurrentIndex((i) => i + 1);
     }
   };
 
-  return (
-    <div
-      className="flex min-h-screen justify-center px-11 py-16"
-      style={{ background: '#1a1918', fontFamily: FONT }}
-    >
-      <div className="flex w-full max-w-[940px] flex-col gap-[30px]">
-        <SlantEgg size="sm" className="self-start" />
+  const handleSubmit = () => {
+    console.log('Assessment complete:', answers);
+    // router.push('/dashboard') or whatever comes next
+  };
 
+  return (
+    <CenteredLayout>
+      <div className="flex w-full max-w-235 flex-col gap-7.5">
         <h1
+          className="text-6 font-medium leading-tight tracking-[-0.5px] text-[#ece9e3] md:text-[34px]"
           style={{
             fontFamily: FONT,
-            fontSize: 34,
-            fontWeight: 500,
-            letterSpacing: '-0.5px',
-            lineHeight: 1.25,
-            color: '#ece9e3',
             margin: 0,
           }}
         >
-          Answer 20 questions about AI literacy to complete your assessment.
+          Article 4: AI Literacy
         </h1>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Countdown initialSeconds={5 * 60} onElapse={handleSubmit} />
+          <Chip icon={<ClipboardIcon />}>
+            {questionsLeft} question{questionsLeft !== 1 ? 's' : ''} left
+          </Chip>
+        </div>
 
         <AssessmentQuestion
           questionNumber={currentIndex + 1}
@@ -295,6 +301,7 @@ export default function AssessmentPage() {
           onAnswerSelect={handleSelect}
           currentQuestion={currentIndex + 1}
           totalQuestions={QUESTIONS.length}
+          showProgress
         />
 
         <button
@@ -302,9 +309,9 @@ export default function AssessmentPage() {
           onClick={handleContinue}
           style={continueBtnStyle(isAnswered)}
         >
-          {isLast ? 'Submit' : 'Continue'}
+          {isLast ? 'Finish' : 'Next Question'}
         </button>
       </div>
-    </div>
+    </CenteredLayout>
   );
 }
